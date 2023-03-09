@@ -29,8 +29,7 @@ type Secret struct {
 	Value string `json:Value`
 }
 
-func (t *SecretKeeper) InitLedger(ctx contractapi.TransactionContextInterface) error {
-
+func (t *SecretKeeper) InitSecretKeeper(ctx contractapi.TransactionContextInterface) error {
 	// init authSet
 	pubkeyset := make(map[string]struct{})
 	pubkeyset["Alice"] = struct{}{}
@@ -51,7 +50,7 @@ func (t *SecretKeeper) InitLedger(ctx contractapi.TransactionContextInterface) e
 
 	// init secret
 	secret := Secret{
-		Value: "",
+		Value: "DefaultSecret",
 	}
 
 	secretJson, err := json.Marshal(secret)
@@ -133,7 +132,7 @@ func (t *SecretKeeper) LockSecret(ctx contractapi.TransactionContextInterface, s
 
 	// update the value
 	newSecret := Secret{
-		Value: "",
+		Value: value,
 	}
 
 	newSecretJson, err := json.Marshal(newSecret)
@@ -168,7 +167,7 @@ func (t *SecretKeeper) RevealSecret(ctx contractapi.TransactionContextInterface,
 		return nil, fmt.Errorf("the asset %s does not exist", SECRET_KEY)
 	}
 	var secret Secret
-	err = json.Unmarshal(secretJson, secret)
+	err = json.Unmarshal(secretJson, &secret)
 	if err != nil {
 		return nil, err
 	}
@@ -185,7 +184,7 @@ func GetAuthList(ctx contractapi.TransactionContextInterface) (*AuthSet, error) 
 	}
 
 	var authSet AuthSet
-	err = json.Unmarshal(authSetJson, authSet)
+	err = json.Unmarshal(authSetJson, &authSet)
 	if err != nil {
 		return nil, err
 	}
@@ -198,7 +197,7 @@ func VerifySig(ctx contractapi.TransactionContextInterface, sig string) (bool, e
 		return false, err
 	}
 
-	if _, exist := authSet.Pubkey["sig"]; exist {
+	if _, exist := authSet.Pubkey[sig]; exist {
 		return true, nil
 	}
 
