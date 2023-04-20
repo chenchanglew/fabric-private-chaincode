@@ -16,8 +16,9 @@ import (
 
 // NewPrivateChaincode creates a new chaincode! This is for go support only!!!
 func NewPrivateChaincode(cc shim.Chaincode) *chaincode.EnclaveChaincode {
+	newStubInterfaceFunc := enclave_go.NewFpcStubInterface
 	ecc := &chaincode.EnclaveChaincode{
-		Enclave:   enclave_go.NewEnclaveStub(cc),
+		Enclave:   enclave_go.NewEnclaveStub(cc, newStubInterfaceFunc),
 		Validator: endorsement.NewValidator(),
 		Extractor: &chaincode.ExtractorImpl{},
 		Ercc:      &ercc.StubImpl{},
