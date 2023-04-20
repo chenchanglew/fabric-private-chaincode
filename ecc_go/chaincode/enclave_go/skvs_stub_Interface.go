@@ -21,10 +21,10 @@ type SkvsStubInterface struct {
 	key        string
 }
 
-func NewSkvsStubInterface(stub shim.ChaincodeStubInterface, input *pb.ChaincodeInput, rwset *readWriteSet, sep StateEncryptionFunctions) *SkvsStubInterface {
+func NewSkvsStubInterface(stub shim.ChaincodeStubInterface, input *pb.ChaincodeInput, rwset *readWriteSet, sep StateEncryptionFunctions) shim.ChaincodeStubInterface {
 	logger.Warning("==== Get New Skvs Interface =====")
 	fpcStub := NewFpcStubInterface(stub, input, rwset, sep)
-	skvsStub := SkvsStubInterface{fpcStub, map[string][]byte{}, map[string][]byte{}, "SKVS"}
+	skvsStub := SkvsStubInterface{fpcStub.(*FpcStubInterface), map[string][]byte{}, map[string][]byte{}, "SKVS"}
 	err := skvsStub.InitSKVS()
 	if err != nil {
 		logger.Warningf("Error!! Initializing SKVS failed")
