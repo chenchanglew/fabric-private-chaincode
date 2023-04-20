@@ -38,10 +38,10 @@ type EnclaveStub struct {
 	hostParams           *protos.HostParameters
 	chaincodeParams      *protos.CCParameters
 	fabricCryptoProvider bccsp.BCCSP
-	newStubInterfaceFunc func(stub shim.ChaincodeStubInterface, input *pb.ChaincodeInput, rwset *readWriteSet, sep StateEncryptionFunctions) *FpcStubInterface
+	newStubInterfaceFunc func(stub shim.ChaincodeStubInterface, input *pb.ChaincodeInput, rwset *readWriteSet, sep StateEncryptionFunctions) shim.ChaincodeStubInterface
 }
 
-func NewEnclaveStub(cc shim.Chaincode, newStubInterfaceFunc func(stub shim.ChaincodeStubInterface, input *pb.ChaincodeInput, rwset *readWriteSet, sep StateEncryptionFunctions) *FpcStubInterface) *EnclaveStub {
+func NewEnclaveStub(cc shim.Chaincode, newStubInterfaceFunc func(stub shim.ChaincodeStubInterface, input *pb.ChaincodeInput, rwset *readWriteSet, sep StateEncryptionFunctions) shim.ChaincodeStubInterface) *EnclaveStub {
 	if err := factory.InitFactories(nil); err != nil {
 		panic(err)
 	}
