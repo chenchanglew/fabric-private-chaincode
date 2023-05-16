@@ -16,7 +16,6 @@ import (
 	"github.com/hyperledger-labs/fabric-smart-client/integration/nwo/fabric"
 	"github.com/hyperledger-labs/fabric-smart-client/integration/nwo/fabric/topology"
 	"github.com/hyperledger-labs/fabric-smart-client/integration/nwo/fsc"
-	"github.com/hyperledger-labs/fabric-smart-client/integration/nwo/monitoring"
 )
 
 const (
@@ -41,10 +40,11 @@ func Fabric() []api.Topology {
 
 	// bring hyperledger explorer into the game
 	// you can reach it http://localhost:8080 with admin:admin
-	monitoringTopology := monitoring.NewTopology()
-	monitoringTopology.EnableHyperledgerExplorer()
+	// monitoringTopology := monitoring.NewTopology()
+	// monitoringTopology.EnableHyperledgerExplorer()
 
-	return []api.Topology{fabricTopology, fsc.NewTopology(), monitoringTopology}
+	return []api.Topology{fabricTopology, fsc.NewTopology()}
+	// return []api.Topology{fabricTopology, fsc.NewTopology(), monitoringTopology}
 }
 
 type config struct {
