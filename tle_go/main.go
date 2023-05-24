@@ -23,6 +23,8 @@ import (
 	validatorv20 "github.com/hyperledger/fabric/core/committer/txvalidator/v20"
 	"github.com/hyperledger/fabric/core/committer/txvalidator/v20/plugindispatcher"
 	vir "github.com/hyperledger/fabric/core/committer/txvalidator/v20/valinforetriever"
+	"github.com/hyperledger/fabric/core/handlers/library"
+	validation "github.com/hyperledger/fabric/core/handlers/validation/api"
 	"github.com/hyperledger/fabric/core/peer"
 	"github.com/hyperledger/fabric/gossip/common"
 	"github.com/hyperledger/fabric/protoutil"
@@ -46,6 +48,7 @@ func main() {
 var tleLogger = flogging.MustGetLogger("tle.verifyblock")
 
 func VerifyBlock(channelPolicyManagerGetter policies.ChannelPolicyManagerGetter, chainID common.ChannelID, seqNum uint64, block *pcommon.Block) error {
+	fmt.Println("start verifyBlock")
 	if block.Header == nil {
 		return fmt.Errorf("Invalid Block on channel [%s]. Header must be different from nil.", chainID)
 	}
@@ -94,6 +97,7 @@ func VerifyBlock(channelPolicyManagerGetter policies.ChannelPolicyManagerGetter,
 	policy, ok := cpm.GetPolicy(policies.BlockValidation)
 	// ok is true if it was the policy requested, or false if it is the default policy
 	tleLogger.Debugf("Got block validation policy for channel [%s] with flag [%t]", channelID, ok)
+	fmt.Printf("Got block validation policy for channel [%s] with flag [%t], policy [%s]\n", channelID, ok, policy)
 
 	// - Prepare SignedData
 	signatureSet := []*protoutil.SignedData{}
@@ -113,7 +117,43 @@ func VerifyBlock(channelPolicyManagerGetter policies.ChannelPolicyManagerGetter,
 	}
 
 	// - Evaluate policy
+	fmt.Println("Start evaluateSignedData")
+	// if len(signatureSet) > 0 {
+	// 	fmt.Printf("signatureSet[0].Identity = [%x]\n", signatureSet[0].Identity)
+	// 	fmt.Printf("signatureSet[0].Data = [%x]\n", signatureSet[0].Data)
+	// 	fmt.Printf("signatureSet[0].Signature = [%x]\n", signatureSet[0].Signature)
+	// }
 	return policy.EvaluateSignedData(signatureSet)
+}
+
+func CreateTxValidatorViaPeer(peerInstance *peer.Peer, cid string, legacyLifecycleValidation plugindispatcher.LifecycleResources, newLifecycleValidation plugindispatcher.CollectionAndLifecycleResources) (*txvalidator.ValidationRouter, error) {
+	libConf, err := library.LoadConfig()
+	if err != nil {
+		return nil, fmt.Errorf("could not decode peer handlers configuration [%s]", err)
+	}
+	reg := library.InitRegistry(libConf)
+	validationPluginsByName := reg.Lookup(library.Validation).(map[string]validation.PluginFactory)
+
+	nWorkers := 3
+	cryptoProvider := peerInstance.CryptoProvider
+	// cryptoProvider, err := sw.NewDefaultSecurityLevelWithKeystore(sw.NewDummyKeyStore())
+	// require.NoError(t, err)
+	channel := peerInstance.Channel(cid)
+	// bundle := (*channelconfig.Bundle)(nil)
+	pluginMapper := plugin.MapBasedMapper(validationPluginsByName)
+	policyManagerFunc := peerInstance.GetPolicyManager
+
+	validator, err := CreateTxValidator(
+		nWorkers,
+		cid,
+		cryptoProvider,
+		channel,
+		// bundle,
+		pluginMapper,
+		policyManagerFunc,
+		legacyLifecycleValidation,
+		newLifecycleValidation)
+	return validator, err
 }
 
 func CreateTxValidator(
@@ -160,8 +200,4 @@ func CreateTxValidator(
 	}
 
 	return validator, nil
-}
-
-func ValidateTx(validator *txvalidator.ValidationRouter, block *pcommon.Block) error {
-	return validator.Validate(block)
 }
