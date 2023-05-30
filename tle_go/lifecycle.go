@@ -17,6 +17,7 @@ import (
 	coreconfig "github.com/hyperledger/fabric/core/config"
 	"github.com/hyperledger/fabric/core/container"
 	"github.com/hyperledger/fabric/core/container/externalbuilder"
+	"github.com/hyperledger/fabric/core/ledger"
 	"github.com/hyperledger/fabric/core/peer"
 	"github.com/hyperledger/fabric/core/policy"
 	"github.com/hyperledger/fabric/core/scc/lscc"
@@ -53,7 +54,7 @@ func (disabledDockerBuilder) Build(string, *persistence.ChaincodePackageMetadata
 	return nil, errors.New("docker build is disabled")
 }
 
-func createLifecycleValidation(peerInstance *peer.Peer) (plugindispatcher.LifecycleResources, plugindispatcher.CollectionAndLifecycleResources) {
+func createLifecycleValidation(peerInstance *peer.Peer) (plugindispatcher.LifecycleResources, plugindispatcher.CollectionAndLifecycleResources, ledger.DeployedChaincodeInfoProvider) {
 	//obtain coreConfiguration
 	coreConfig, err := peer.GlobalConfig()
 	if err != nil {
@@ -151,5 +152,5 @@ func createLifecycleValidation(peerInstance *peer.Peer) (plugindispatcher.Lifecy
 
 	fmt.Println("--- successfully generate LifecycleValidatorCommitter ---")
 
-	return lsccInst, lifecycleValidatorCommitter
+	return lsccInst, lifecycleValidatorCommitter, lifecycleValidatorCommitter
 }

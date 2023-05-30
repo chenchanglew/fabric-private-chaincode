@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"path/filepath"
@@ -11,12 +12,15 @@ import (
 	"testing"
 
 	"github.com/hyperledger/fabric-private-chaincode/tle_go/mocks"
+	"github.com/hyperledger/fabric-protos-go/common"
 	configtxtest "github.com/hyperledger/fabric/common/configtx/test"
 	"github.com/hyperledger/fabric/common/policies"
+	"github.com/hyperledger/fabric/core/committer"
 	"github.com/hyperledger/fabric/core/committer/txvalidator"
 	"github.com/hyperledger/fabric/core/committer/txvalidator/plugin"
 	"github.com/hyperledger/fabric/core/handlers/library"
 	validation "github.com/hyperledger/fabric/core/handlers/validation/api"
+	"github.com/hyperledger/fabric/core/ledger"
 	ledgermocks "github.com/hyperledger/fabric/core/ledger/mock"
 	"github.com/hyperledger/fabric/core/peer"
 	"github.com/hyperledger/fabric/protoutil"
@@ -130,6 +134,95 @@ func SetupConfig2() {
 	PrintConfig()
 }
 
+func StoreBlock(lc *committer.LedgerCommitter, block *common.Block) error {
+	if block.Data == nil {
+		return errors.New("Block data is empty")
+	}
+	if block.Header == nil {
+		return errors.New("Block header is nil")
+	}
+
+	blockAndPvtData := &ledger.BlockAndPvtData{
+		Block:          block,
+		PvtData:        make(ledger.TxPvtDataMap),
+		MissingPvtData: make(ledger.TxMissingPvtData),
+	}
+
+	err := CommitLegacy(lc, blockAndPvtData, &ledger.CommitOptions{})
+	if err != nil {
+		return errors.New(fmt.Sprintf("commit failed with error %s", err))
+	}
+	return err
+}
+
+func CommitLegacy(lc *committer.LedgerCommitter, blockAndPvtData *ledger.BlockAndPvtData, commitOpts *ledger.CommitOptions) error {
+	// Committing new block
+	if err := lc.PeerLedgerSupport.CommitLegacy(blockAndPvtData, commitOpts); err != nil {
+		return err
+	}
+	return nil
+}
+
+func TestBunchValidation2(t *testing.T) {
+	// setup config
+	SetupConfig2()
+	defer viper.Reset()
+
+	// read genesis block
+	rawBlock0, err := ioutil.ReadFile("blocks/t0.block")
+	require.NoError(t, err)
+	block0, err := protoutil.UnmarshalBlock(rawBlock0)
+	require.NoError(t, err)
+
+	// initialize peer
+	// peerInstance, cleanup := peer.NewTestPeerLight(t)
+	peerInstance, cleanup := peer.NewTestPeer2(t)
+	defer cleanup()
+
+	err = InitializePeer(peerInstance)
+	require.NoError(t, err)
+
+	fmt.Println("---- Creating liftcycleValidation ----")
+	legacyLifecycleValidation, NewLifecycleValidation, dcip := createLifecycleValidation(peerInstance)
+	channelName := "testchannel"
+
+	fmt.Println("---- Creating channel ----")
+	err = peerInstance.CreateChannel(channelName, block0, dcip, legacyLifecycleValidation, NewLifecycleValidation)
+	require.NoError(t, err)
+	channel := peerInstance.Channel(channelName)
+	ledger := channel.Ledger()
+	lc := committer.NewLedgerCommitter(ledger)
+
+	policyMgr := policies.PolicyManagerGetterFunc(peerInstance.GetPolicyManager)
+
+	verifyNum := 12
+
+	fmt.Println("---- Creating validator ----")
+	validator, err := CreateTxValidatorViaPeer(peerInstance, channelName, legacyLifecycleValidation, NewLifecycleValidation)
+	require.NoError(t, err)
+
+	for i := 1; i <= verifyNum; i++ {
+		fmt.Printf("---verifying block %d----\n", i)
+		rawBlockX, err := ioutil.ReadFile("blocks/t" + strconv.Itoa(i) + ".block")
+		require.NoError(t, err)
+		blockX, err := protoutil.UnmarshalBlock(rawBlockX)
+		require.NoError(t, err)
+
+		err = VerifyBlock(policyMgr, []byte("testchannel"), uint64(i), blockX)
+		if err != nil {
+			fmt.Println(err)
+		}
+		require.NoError(t, err)
+
+		fmt.Printf("--- Verify Block %d success, start verify txn ---\n", i)
+
+		err = validator.Validate(blockX)
+		require.NoError(t, err)
+
+		StoreBlock(lc, blockX)
+	}
+}
+
 func TestBunchValidation(t *testing.T) {
 	// setup config
 	SetupConfig2()
@@ -152,11 +245,12 @@ func TestBunchValidation(t *testing.T) {
 	fmt.Println("---- Creating liftcycleValidation ----")
 	// legacyLifecycleValidation := (plugindispatcher.LifecycleResources)(nil)
 	// NewLiftcycleValidation := (plugindispatcher.CollectionAndLifecycleResources)(nil)
-	legacyLifecycleValidation, NewLifecycleValidation := createLifecycleValidation(peerInstance)
+	legacyLifecycleValidation, NewLifecycleValidation, dcip := createLifecycleValidation(peerInstance)
 	channelName := "testchannel"
 
 	fmt.Println("---- Creating channel ----")
-	err = peerInstance.CreateChannel(channelName, block0, &ledgermocks.DeployedChaincodeInfoProvider{}, legacyLifecycleValidation, NewLifecycleValidation)
+	err = peerInstance.CreateChannel(channelName, block0, dcip, legacyLifecycleValidation, NewLifecycleValidation)
+	// err = peerInstance.CreateChannel(channelName, block0, &ledgermocks.DeployedChaincodeInfoProvider{}, legacyLifecycleValidation, NewLifecycleValidation)
 	if err != nil {
 		t.Fatalf("failed to create chain %s", err)
 	}
@@ -187,7 +281,6 @@ func TestBunchValidation(t *testing.T) {
 		err = validator.Validate(blockX)
 		require.NoError(t, err)
 	}
-
 }
 
 func TestIntegration(t *testing.T) {
@@ -223,13 +316,6 @@ func TestIntegration(t *testing.T) {
 		fmt.Println(err)
 	}
 	require.NoError(t, err)
-
-	fmt.Println("----------------")
-
-	// validator, err := createValidator(t)
-	// require.NoError(t, err)
-	// err = validator.Validate(block)
-	// require.NoError(t, err)
 }
 
 func createValidator(t *testing.T) (*txvalidator.ValidationRouter, error) {
