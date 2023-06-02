@@ -11,8 +11,8 @@ import (
 )
 
 type TleServer struct {
-	// type embedded to comply with Google lib
 	pb.UnimplementedTleServiceServer
+	tleState *Tlestate
 }
 
 func (s *TleServer) GetMeta(ctx context.Context, req *pb.MetaRequest) (*pb.MetaResponse, error) {
@@ -20,7 +20,11 @@ func (s *TleServer) GetMeta(ctx context.Context, req *pb.MetaRequest) (*pb.MetaR
 	key := req.Key
 	fmt.Printf("--- tle_go/server.go getMeta, namespace = %s, key = %s ---\n", namespace, key)
 
-	data := []byte("Sample metadata")
+	data, err := s.tleState.GetMeta(namespace, key)
+	if err != nil {
+		return nil, err
+	}
+
 	lastCommitHash := []byte("Sample Commit Hash")
 	return &pb.MetaResponse{Data: data, LastCommitHash: lastCommitHash}, nil
 }
@@ -32,13 +36,13 @@ func (s *TleServer) GetSession(ctx context.Context, req *pb.Empty) (*pb.MetaResp
 	return &pb.MetaResponse{Data: data, LastCommitHash: lastCommitHash}, nil
 }
 
-func ServeMeta(port string) {
+func ServeMeta(port string, tleState *Tlestate) {
 	lis, err := net.Listen("tcp", port)
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}
 	s := grpc.NewServer()
-	pb.RegisterTleServiceServer(s, &TleServer{})
+	pb.RegisterTleServiceServer(s, &TleServer{tleState: tleState})
 	fmt.Println("Server listening on port", port)
 	if err := s.Serve(lis); err != nil {
 		log.Fatalf("failed to serve: %v", err)

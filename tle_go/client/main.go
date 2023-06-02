@@ -10,13 +10,10 @@ import (
 	pb "github.com/hyperledger/fabric-private-chaincode/tle_go/tlegrpc"
 )
 
-const (
-	address = "localhost:50051"
-)
-
 func main() {
 	// Set up a connection to the server
-	conn, err := grpc.Dial(address, grpc.WithInsecure())
+	// conn, err := grpc.Dial("host.docker.internal:50051", grpc.WithInsecure())
+	conn, err := grpc.Dial("localhost:50051", grpc.WithInsecure())
 	if err != nil {
 		log.Fatalf("Failed to connect: %v", err)
 	}
@@ -27,8 +24,8 @@ func main() {
 
 	// Prepare the request
 	request := &pb.MetaRequest{
-		Namespace: "example",
-		Key:       "mykey",
+		Namespace: "fpc-secret-keeper-go",
+		Key:       "AUTH_LIST_KEY",
 	}
 
 	// Send the gRPC request
