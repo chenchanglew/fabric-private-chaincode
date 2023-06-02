@@ -68,8 +68,8 @@ func (s *TleStubInterface) ValidateMeta(metadata []byte, encValue []byte) error 
 	}
 	// TODO
 	fmt.Printf("Validate Metadata failed, metadata: %x != hash: %x\n", metadata, hash)
-	// return errors.Errorf("Validate Metadata failed, metadata: %x != hash: %x", metadata, hash)
-	return nil
+	return errors.Errorf("Validate Metadata failed, metadata: %x != hash: %x", metadata, hash)
+	// return nil
 }
 
 func (s *TleStubInterface) GetMeta(key string) ([]byte, error) {
