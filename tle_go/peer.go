@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/hyperledger/fabric-protos-go/common"
+	"github.com/hyperledger/fabric-protos-go/peer"
 	"github.com/hyperledger/fabric/core/ledger/kvledger/txmgmt/rwsetutil"
 	"github.com/hyperledger/fabric/protoutil"
 )
@@ -66,6 +67,11 @@ func (p *TlePeer) vsccExtractRwsetRaw(block *common.Block, txPosition int, actio
 func (p *TlePeer) UpdateState(block *common.Block) error {
 	for tIdx, _ := range block.Data.Data {
 		// TODO: continue if current txn is invalid.
+		txsfltr := ValidationFlags(block.Metadata.Metadata[common.BlockMetadataIndex_TRANSACTIONS_FILTER])
+		if !txsfltr.IsSetTo(tIdx, peer.TxValidationCode_VALID) {
+			fmt.Println("The current txn is not valid!")
+			// continue
+		}
 
 		// extract rwset
 		rwsetRaw, err := p.vsccExtractRwsetRaw(block, tIdx, 0)
@@ -88,7 +94,7 @@ func (p *TlePeer) UpdateState(block *common.Block) error {
 			for _, kvWrite := range nsRWSet.KvRwSet.Writes {
 				metaData := sha256.Sum256(kvWrite.Value)
 
-				fmt.Printf("Saving namespace: %v, key: %v, value: %v, metadata: %x\n", nsRWSet.NameSpace, kvWrite.Key, kvWrite.Value, metaData)
+				fmt.Printf("Saving namespace: %v, key: %v, metadata: %x\n", nsRWSet.NameSpace, kvWrite.Key, metaData)
 
 				// Update tleState using PutMeta
 				err := p.tleState.PutMeta(nsRWSet.NameSpace, kvWrite.Key, metaData[:])
@@ -104,7 +110,7 @@ func (p *TlePeer) UpdateState(block *common.Block) error {
 func (p *TlePeer) GetBlock() (*common.Block, error) {
 	// Simulating data retrieval from somewhere
 	fmt.Printf("Start to get block num: %d\n", p.GetNextBlockNum())
-	rawBlock, err := ioutil.ReadFile("blocks/t" + strconv.Itoa(int(p.GetNextBlockNum())) + ".block")
+	rawBlock, err := ioutil.ReadFile("tmpBlocks/t" + strconv.Itoa(int(p.GetNextBlockNum())) + ".block")
 	if err != nil {
 		return nil, err
 	}
@@ -154,7 +160,7 @@ func (p *TlePeer) Start() {
 
 func GetGenesisBlock() *common.Block {
 	// TODO get from somewhere else.
-	rawBlock0, err := ioutil.ReadFile("blocks/t0.block")
+	rawBlock0, err := ioutil.ReadFile("tmpBlocks/t0.block")
 	if err != nil {
 		panic("read genesis block error")
 	}
