@@ -40,7 +40,7 @@ require (
 	github.com/hashicorp/go-version v1.2.0 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/hyperledger/fabric-amcl v0.0.0-20200128223036-d1aa2665426a // indirect
-	github.com/hyperledger/fabric-chaincode-go v0.0.0-20220920210243-7bc6fa0dd58b // indirect
+	github.com/hyperledger/fabric-chaincode-go v0.0.0-20201119163726-f8ef75b17719 // indirect
 	github.com/hyperledger/fabric-lib-go v1.0.0 // indirect
 	github.com/ijc/Gotty v0.0.0-20170406111628-a8b993ba6abd // indirect
 	github.com/konsorten/go-windows-terminal-sequences v1.0.2 // indirect
@@ -58,7 +58,6 @@ require (
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/rcrowley/go-metrics v0.0.0-20181016184325-3113b8401b8a // indirect
-	github.com/rogpeppe/go-internal v1.10.0 // indirect
 	github.com/sirupsen/logrus v1.4.2 // indirect
 	github.com/spf13/afero v1.3.1 // indirect
 	github.com/spf13/cast v1.3.1 // indirect

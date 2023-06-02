@@ -31,7 +31,7 @@ type TleStubInterface struct {
 func NewTleStubInterface(stub shim.ChaincodeStubInterface, input *pb.ChaincodeInput, rwset *readWriteSet, sep StateEncryptionFunctions) shim.ChaincodeStubInterface {
 	logger.Warning("==== Get New TLE Interface =====")
 	fpcStub := NewFpcStubInterface(stub, input, rwset, sep)
-	tleStub := TleStubInterface{fpcStub.(*FpcStubInterface), []byte{}, "localhost:50051"}
+	tleStub := TleStubInterface{fpcStub.(*FpcStubInterface), []byte{}, "host.docker.internal:50051"}
 	err := tleStub.InitTleStub()
 	if err != nil {
 		logger.Warningf("Error!! Initializing SKVS failed")
@@ -130,9 +130,9 @@ func (s *TleStubInterface) GetState(key string) ([]byte, error) {
 
 	err = s.ValidateMeta(metadata, encValue)
 	if err != nil {
-		return s.sep.DecryptState(encValue)
+		return nil, err
 	}
-	return nil, err
+	return s.sep.DecryptState(encValue)
 }
 
 func (s *TleStubInterface) PutState(key string, value []byte) error {
