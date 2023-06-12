@@ -42,14 +42,14 @@ func NewTleStubInterface(stub shim.ChaincodeStubInterface, input *pb.ChaincodeIn
 func (s *TleStubInterface) InitTleStub() error {
 	logger.Warningf(" === Initializing Tle Stub === ")
 
-	// establish secure connection to TLE (TODO)
+	// TODO: establish secure connection to TLE
 	conn, err := grpc.Dial(s.Address, grpc.WithInsecure())
 	if err != nil {
 		return err
 	}
 	defer conn.Close()
 
-	// Create a new gRPC clien
+	// Create a new gRPC client
 	client := tle.NewTleServiceClient(conn)
 	response, err := client.GetSession(context.Background(), &tle.Empty{})
 	if err != nil {
@@ -66,8 +66,6 @@ func (s *TleStubInterface) ValidateMeta(metadata []byte, encValue []byte) error 
 	if bytes.Equal(hash[:], metadata) {
 		return nil
 	}
-	// TODO
-	fmt.Printf("Validate Metadata failed, metadata: %x != hash: %x\n", metadata, hash)
 	return errors.Errorf("Validate Metadata failed, metadata: %x != hash: %x", metadata, hash)
 	// return nil
 }
@@ -75,7 +73,7 @@ func (s *TleStubInterface) ValidateMeta(metadata []byte, encValue []byte) error 
 func (s *TleStubInterface) GetMeta(key string) ([]byte, error) {
 	logger.Warningf("Calling Get Meta from TLE, key: %s", key)
 	// Q: How to get the namespace? or we dont need namespace?
-	// establish secure connection to TLE (TODO)
+	// TODO: establish secure connection to TLE
 	conn, err := grpc.Dial(s.Address, grpc.WithInsecure())
 	if err != nil {
 		return nil, err
