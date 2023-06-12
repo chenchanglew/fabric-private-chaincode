@@ -9,8 +9,11 @@ import (
 	"time"
 
 	"github.com/hyperledger/fabric-protos-go/common"
-	"github.com/hyperledger/fabric-protos-go/peer"
+	"github.com/hyperledger/fabric/common/policies"
+	"github.com/hyperledger/fabric/core/committer"
+	"github.com/hyperledger/fabric/core/committer/txvalidator"
 	"github.com/hyperledger/fabric/core/ledger/kvledger/txmgmt/rwsetutil"
+	"github.com/hyperledger/fabric/core/peer"
 	"github.com/hyperledger/fabric/protoutil"
 )
 
@@ -18,6 +21,11 @@ type TlePeer struct {
 	tleState     *Tlestate
 	nextBlockNum uint
 	mutex        sync.Mutex
+
+	channelName string
+	lc          *committer.LedgerCommitter
+	policyMgr   policies.PolicyManagerGetterFunc
+	validator   *txvalidator.ValidationRouter
 }
 
 func (p *TlePeer) vsccExtractRwsetRaw(block *common.Block, txPosition int, actionPosition int) ([]byte, error) {
@@ -68,7 +76,8 @@ func (p *TlePeer) UpdateState(block *common.Block) error {
 	for tIdx, _ := range block.Data.Data {
 		// TODO: continue if current txn is invalid.
 		txsfltr := ValidationFlags(block.Metadata.Metadata[common.BlockMetadataIndex_TRANSACTIONS_FILTER])
-		if !txsfltr.IsSetTo(tIdx, peer.TxValidationCode_VALID) {
+		fmt.Printf("blockNum %d, tIdx: %d, validationCode: %v\n", tIdx, block.Header.Number, txsfltr.Flag(tIdx))
+		if txsfltr.IsInvalid(tIdx) {
 			fmt.Println("The current txn is not valid!")
 			// continue
 		}
@@ -118,11 +127,20 @@ func (p *TlePeer) GetBlock() (*common.Block, error) {
 }
 
 func (p *TlePeer) ProcessBlock(block *common.Block) error {
-	// TODO: verify Block
+	err := VerifyBlock(p.policyMgr, []byte(p.channelName), uint64(p.GetNextBlockNum()), block)
+	if err != nil {
+		return err
+	}
+	fmt.Printf("--- Verify Block %d success, start verify txn ---\n", p.GetNextBlockNum())
+	err = p.validator.Validate(block)
+	if err != nil {
+		return err
+	}
 
-	// TODO: verify txn
-
-	// TODO: store Block
+	err = StoreBlock(p.lc, block)
+	if err != nil {
+		return err
+	}
 
 	// update state
 	p.IncrementNextBlockNum()
@@ -141,7 +159,40 @@ func (p *TlePeer) IncrementNextBlockNum() {
 	p.nextBlockNum += 1
 }
 
+func (p *TlePeer) InitFabricPart() func() {
+	genesisBlock := GetGenesisBlock()
+	peerInstance, cleanup := peer.NewFabricPeer()
+
+	err := InitializeFabricPeer(peerInstance)
+	if err != nil {
+		panic(err)
+	}
+	legacyLifecycleValidation, NewLifecycleValidation, dcip := createLifecycleValidation(peerInstance)
+	channelName := "testchannel"
+
+	err = peerInstance.CreateChannel(channelName, genesisBlock, dcip, legacyLifecycleValidation, NewLifecycleValidation)
+	if err != nil {
+		panic(err)
+	}
+	ledger := peerInstance.Channel(channelName).Ledger()
+	lc := committer.NewLedgerCommitter(ledger)
+	policyMgr := policies.PolicyManagerGetterFunc(peerInstance.GetPolicyManager)
+	validator, err := CreateTxValidatorViaPeer(peerInstance, channelName, legacyLifecycleValidation, NewLifecycleValidation)
+	if err != nil {
+		panic(err)
+	}
+	p.lc = lc
+	p.policyMgr = policyMgr
+	p.validator = validator
+	p.channelName = channelName
+
+	return cleanup
+}
+
 func (p *TlePeer) Start() {
+	cleanup := p.InitFabricPart()
+	defer cleanup()
+
 	for {
 		// 5 second update one block
 		time.Sleep(5 * time.Second)
@@ -173,7 +224,6 @@ func GetGenesisBlock() *common.Block {
 
 func ServePeer(tleState *Tlestate) {
 	// TODO change the logic here.
-	_ = GetGenesisBlock()
 	peer := &TlePeer{
 		tleState:     tleState,
 		nextBlockNum: 1,

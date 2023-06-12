@@ -2,25 +2,20 @@ package main
 
 import (
 	"encoding/hex"
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"path/filepath"
 	"runtime"
 	"strconv"
-	"strings"
 	"testing"
 
 	"github.com/hyperledger/fabric-private-chaincode/tle_go/mocks"
-	"github.com/hyperledger/fabric-protos-go/common"
 	configtxtest "github.com/hyperledger/fabric/common/configtx/test"
 	"github.com/hyperledger/fabric/common/policies"
 	"github.com/hyperledger/fabric/core/committer"
 	"github.com/hyperledger/fabric/core/committer/txvalidator"
 	"github.com/hyperledger/fabric/core/committer/txvalidator/plugin"
-	"github.com/hyperledger/fabric/core/handlers/library"
 	validation "github.com/hyperledger/fabric/core/handlers/validation/api"
-	"github.com/hyperledger/fabric/core/ledger"
 	ledgermocks "github.com/hyperledger/fabric/core/ledger/mock"
 	"github.com/hyperledger/fabric/core/peer"
 	"github.com/hyperledger/fabric/protoutil"
@@ -29,7 +24,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func SetupConfig(t *testing.T) {
+func SetupConfigTest(t *testing.T) {
 	// cwd, err := os.Getwd()
 	cwd := "/Users/lew/go/src/github.com/hyperledger/fabric-private-chaincode/samples/deployment/fabric-smart-client/the-simple-testing-network/testdata/fabric.default/peers/"
 	// require.NoError(t, err, "failed to get current working directory")
@@ -93,79 +88,10 @@ func SetupConfig(t *testing.T) {
 	})
 }
 
-func PrintConfig() {
-	fmt.Println("--- viper config ---")
-	settings := viper.AllSettings()
-	for key, value := range settings {
-		fmt.Printf("%s: %v\n", key, value)
-	}
-	fmt.Println("--finish viper config--")
-}
-
-func InitializePeer(peerInstance *peer.Peer) error {
-	libConf, err := library.LoadConfig()
-	if err != nil {
-		return fmt.Errorf("could not decode peer handlers configuration [%s]", err)
-	}
-
-	reg := library.InitRegistry(libConf)
-	validationPluginsByName := reg.Lookup(library.Validation).(map[string]validation.PluginFactory)
-	peerInstance.Initialize(
-		func(cid string) {
-			fmt.Printf("--- peerInstance Init function with cid: %s ---\n", cid)
-		},
-		nil,
-		plugin.MapBasedMapper(validationPluginsByName),
-		&ledgermocks.DeployedChaincodeInfoProvider{},
-		nil,
-		nil,
-		runtime.NumCPU(),
-	)
-	return nil
-}
-
-func SetupConfig2() {
-	viper.SetConfigFile("/Users/lew/go/src/github.com/hyperledger/fabric-private-chaincode/samples/deployment/fabric-smart-client/the-simple-testing-network/testdata/fabric.default/peers/Org1.Org1_peer_0/core.yaml")
-	viper.ReadInConfig()
-	viper.SetEnvPrefix("core")
-	viper.AutomaticEnv()
-	replacer := strings.NewReplacer(".", "_")
-	viper.SetEnvKeyReplacer(replacer)
-	PrintConfig()
-}
-
-func StoreBlock(lc *committer.LedgerCommitter, block *common.Block) error {
-	if block.Data == nil {
-		return errors.New("Block data is empty")
-	}
-	if block.Header == nil {
-		return errors.New("Block header is nil")
-	}
-
-	blockAndPvtData := &ledger.BlockAndPvtData{
-		Block:          block,
-		PvtData:        make(ledger.TxPvtDataMap),
-		MissingPvtData: make(ledger.TxMissingPvtData),
-	}
-
-	err := CommitLegacy(lc, blockAndPvtData, &ledger.CommitOptions{})
-	if err != nil {
-		return errors.New(fmt.Sprintf("commit failed with error %s", err))
-	}
-	return err
-}
-
-func CommitLegacy(lc *committer.LedgerCommitter, blockAndPvtData *ledger.BlockAndPvtData, commitOpts *ledger.CommitOptions) error {
-	// Committing new block
-	if err := lc.PeerLedgerSupport.CommitLegacy(blockAndPvtData, commitOpts); err != nil {
-		return err
-	}
-	return nil
-}
-
 func TestBunchValidation2(t *testing.T) {
 	// setup config
-	SetupConfig2()
+	configPath := "/Users/lew/go/src/github.com/hyperledger/fabric-private-chaincode/samples/deployment/fabric-smart-client/the-simple-testing-network/testdata/fabric.default/peers/Org1.Org1_peer_0/core.yaml"
+	SetupConfig(configPath)
 	defer viper.Reset()
 
 	// read genesis block
@@ -179,7 +105,7 @@ func TestBunchValidation2(t *testing.T) {
 	peerInstance, cleanup := peer.NewTestPeer2(t)
 	defer cleanup()
 
-	err = InitializePeer(peerInstance)
+	err = InitializeFabricPeer(peerInstance)
 	require.NoError(t, err)
 
 	fmt.Println("---- Creating liftcycleValidation ----")
@@ -225,7 +151,7 @@ func TestBunchValidation2(t *testing.T) {
 
 func TestBunchValidation(t *testing.T) {
 	// setup config
-	SetupConfig2()
+	SetupConfigTest(t)
 	defer viper.Reset()
 
 	// read genesis block
@@ -239,7 +165,7 @@ func TestBunchValidation(t *testing.T) {
 	peerInstance, cleanup := peer.NewTestPeer2(t)
 	defer cleanup()
 
-	err = InitializePeer(peerInstance)
+	err = InitializeFabricPeer(peerInstance)
 	require.NoError(t, err)
 
 	fmt.Println("---- Creating liftcycleValidation ----")
