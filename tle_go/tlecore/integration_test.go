@@ -1,4 +1,4 @@
-package main
+package tlecore
 
 import (
 	"encoding/hex"
@@ -10,6 +10,8 @@ import (
 	"testing"
 
 	"github.com/hyperledger/fabric-private-chaincode/tle_go/mocks"
+	"github.com/hyperledger/fabric-protos-go/common"
+	pp "github.com/hyperledger/fabric-protos-go/peer"
 	configtxtest "github.com/hyperledger/fabric/common/configtx/test"
 	"github.com/hyperledger/fabric/common/policies"
 	"github.com/hyperledger/fabric/core/committer"
@@ -88,14 +90,15 @@ func SetupConfigTest(t *testing.T) {
 	})
 }
 
-func TestBunchValidation2(t *testing.T) {
+func TestBunchValidation(t *testing.T) {
 	// setup config
 	configPath := "/Users/lew/go/src/github.com/hyperledger/fabric-private-chaincode/samples/deployment/fabric-smart-client/the-simple-testing-network/testdata/fabric.default/peers/Org1.Org1_peer_0/core.yaml"
+	blockDirectory := "../blocks/"
 	SetupConfig(configPath)
 	defer viper.Reset()
 
 	// read genesis block
-	rawBlock0, err := ioutil.ReadFile("blocks/t0.block")
+	rawBlock0, err := ioutil.ReadFile(blockDirectory + "t0.block")
 	require.NoError(t, err)
 	block0, err := protoutil.UnmarshalBlock(rawBlock0)
 	require.NoError(t, err)
@@ -128,8 +131,11 @@ func TestBunchValidation2(t *testing.T) {
 	require.NoError(t, err)
 
 	for i := 1; i <= verifyNum; i++ {
+		// if i >= 9 && i <= 10 {
+		// 	continue
+		// }
 		fmt.Printf("---verifying block %d----\n", i)
-		rawBlockX, err := ioutil.ReadFile("blocks/t" + strconv.Itoa(i) + ".block")
+		rawBlockX, err := ioutil.ReadFile(blockDirectory + "t" + strconv.Itoa(i) + ".block")
 		require.NoError(t, err)
 		blockX, err := protoutil.UnmarshalBlock(rawBlockX)
 		require.NoError(t, err)
@@ -146,66 +152,12 @@ func TestBunchValidation2(t *testing.T) {
 		require.NoError(t, err)
 
 		StoreBlock(lc, blockX)
-	}
-}
 
-func TestBunchValidation(t *testing.T) {
-	// setup config
-	SetupConfigTest(t)
-	defer viper.Reset()
-
-	// read genesis block
-	rawBlock0, err := ioutil.ReadFile("blocks/t0.block")
-	require.NoError(t, err)
-	block0, err := protoutil.UnmarshalBlock(rawBlock0)
-	require.NoError(t, err)
-
-	// initialize peer
-	// peerInstance, cleanup := peer.NewTestPeerLight(t)
-	peerInstance, cleanup := peer.NewTestPeer2(t)
-	defer cleanup()
-
-	err = InitializeFabricPeer(peerInstance)
-	require.NoError(t, err)
-
-	fmt.Println("---- Creating liftcycleValidation ----")
-	// legacyLifecycleValidation := (plugindispatcher.LifecycleResources)(nil)
-	// NewLiftcycleValidation := (plugindispatcher.CollectionAndLifecycleResources)(nil)
-	legacyLifecycleValidation, NewLifecycleValidation, dcip := createLifecycleValidation(peerInstance)
-	channelName := "testchannel"
-
-	fmt.Println("---- Creating channel ----")
-	err = peerInstance.CreateChannel(channelName, block0, dcip, legacyLifecycleValidation, NewLifecycleValidation)
-	// err = peerInstance.CreateChannel(channelName, block0, &ledgermocks.DeployedChaincodeInfoProvider{}, legacyLifecycleValidation, NewLifecycleValidation)
-	if err != nil {
-		t.Fatalf("failed to create chain %s", err)
-	}
-
-	policyMgr := policies.PolicyManagerGetterFunc(peerInstance.GetPolicyManager)
-
-	verifyNum := 12
-
-	fmt.Println("---- Creating validator ----")
-	validator, err := CreateTxValidatorViaPeer(peerInstance, channelName, legacyLifecycleValidation, NewLifecycleValidation)
-	require.NoError(t, err)
-
-	for i := 1; i <= verifyNum; i++ {
-		fmt.Printf("---verifying block %d----\n", i)
-		rawBlockX, err := ioutil.ReadFile("blocks/t" + strconv.Itoa(i) + ".block")
-		require.NoError(t, err)
-		blockX, err := protoutil.UnmarshalBlock(rawBlockX)
-		require.NoError(t, err)
-
-		err = VerifyBlock(policyMgr, []byte("testchannel"), uint64(i), blockX)
-		if err != nil {
-			fmt.Println(err)
+		for tIdx, _ := range blockX.Data.Data {
+			flags := ValidationFlags(blockX.Metadata.Metadata[common.BlockMetadataIndex_TRANSACTIONS_FILTER])
+			require.Equal(t, flags.Flag(tIdx), pp.TxValidationCode_VALID)
 		}
-		require.NoError(t, err)
 
-		fmt.Printf("--- Verify Block %d success, start verify txn ---\n", i)
-
-		err = validator.Validate(blockX)
-		require.NoError(t, err)
 	}
 }
 
