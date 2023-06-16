@@ -1,10 +1,31 @@
-# Use an official Go runtime as the base image
-FROM golang:1.17-alpine
+# Copyright IBM Corp. All Rights Reserved.
+# Copyright 2020 Intel Corporation
+#
+# SPDX-License-Identifier: Apache-2.0
 
-# Set the working directory inside the container
-WORKDIR /app
+# Description:
+#   Sets up the template of a docker environment to run FPC go chaincode
+#
+#  Configuration (build) parameters (for defaults, see below section with ARGs)
+#  - fpc image version:          FPC_VERSION
+#  - sgxmode:                    SGX_MODE
+#  - Chaincode as a Server Port: CAAS_PORT
 
-COPY . .
+ARG FPC_CCENV_IMAGE=hyperledger/fabric-private-chaincode-ccenv:main
 
-# Set the entry point for the container
-CMD ["sleep", "infinity"]
+FROM ${FPC_CCENV_IMAGE}
+
+ARG SGX_MODE
+ENV SGX_MODE=${SGX_MODE}
+ARG OE_SIMULATION
+ENV OE_SIMULATION=${OE_SIMULATION}
+
+ARG CAAS_PORT=50051
+ARG CC_PATH="/usr/local/bin"
+
+COPY tle-bundle ${CC_PATH}/chaincode
+
+WORKDIR ${CC_PATH}
+EXPOSE ${CAAS_PORT}
+
+CMD ["chaincode"]

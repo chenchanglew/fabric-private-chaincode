@@ -1,4 +1,4 @@
-package main
+package tlecore
 
 import (
 	"github.com/hyperledger/fabric-protos-go/peer"
