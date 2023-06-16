@@ -1,4 +1,4 @@
-package main
+package tlecore
 
 import (
 	"errors"
@@ -58,7 +58,7 @@ func createLifecycleValidation(peerInstance *peer.Peer) (plugindispatcher.Lifecy
 	//obtain coreConfiguration
 	coreConfig, err := peer.GlobalConfig()
 	if err != nil {
-		fmt.Printf("obtain coreConfiguration failed, err: %s", err)
+		fmt.Printf("obtain coreConfiguration failed, err: %s\n", err)
 		panic("!!!err!!!")
 	}
 
@@ -68,7 +68,7 @@ func createLifecycleValidation(peerInstance *peer.Peer) (plugindispatcher.Lifecy
 	externalBuilderOutput := filepath.Join(coreconfig.GetPath("peer.fileSystemPath"), "externalbuilder", "builds")
 	err = os.MkdirAll(externalBuilderOutput, 0700)
 	if err != nil {
-		fmt.Printf("could not create externalbuilder build output dir: %s", err)
+		fmt.Printf("could not create externalbuilder build output dir: %s\n", err)
 		panic("!!err!!")
 	}
 

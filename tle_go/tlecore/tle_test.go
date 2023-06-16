@@ -1,4 +1,4 @@
-package main
+package tlecore
 
 import (
 	"fmt"

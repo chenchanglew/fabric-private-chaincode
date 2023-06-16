@@ -1,4 +1,4 @@
-package main
+package tlecore
 
 import (
 	"crypto/sha256"
@@ -193,19 +193,22 @@ func (p *TlePeer) Start() {
 	cleanup := p.InitFabricPart()
 	defer cleanup()
 
+	waitTime := 1
 	for {
-		// 5 second update one block
-		time.Sleep(5 * time.Second)
+		// wait several second to update one block
+		time.Sleep(time.Duration(waitTime) * time.Second)
 
 		block, err := p.GetBlock()
 		if err != nil {
 			fmt.Printf("TlePeer GetBlock Failed, %v\n", err)
+			waitTime = waitTime * 2
 			continue
 		}
 		err = p.ProcessBlock(block)
 		if err != nil {
 			fmt.Printf("TlePeer Process Block error, %v\n", err)
 		}
+		waitTime = 1
 	}
 }
 
@@ -215,6 +218,7 @@ func GetGenesisBlock() *common.Block {
 	if err != nil {
 		panic("read genesis block error")
 	}
+	fmt.Println("Finish reading genesis block!!!")
 	genesisBlock, err := protoutil.UnmarshalBlock(rawBlock0)
 	if err != nil {
 		panic("Unmarshal genesis block error")
