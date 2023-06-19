@@ -4,6 +4,8 @@ import (
 	"crypto/sha256"
 	"fmt"
 	"io/ioutil"
+	"os"
+	"path/filepath"
 	"strconv"
 	"sync"
 	"time"
@@ -119,7 +121,11 @@ func (p *TlePeer) UpdateState(block *common.Block) error {
 func (p *TlePeer) GetBlock() (*common.Block, error) {
 	// Simulating data retrieval from somewhere
 	fmt.Printf("Start to get block num: %d\n", p.GetNextBlockNum())
-	rawBlock, err := ioutil.ReadFile("tmpBlocks/t" + strconv.Itoa(int(p.GetNextBlockNum())) + ".block")
+	blockPath := os.Getenv("BLOCK_PATH")
+	if blockPath == "" {
+		blockPath = "tmpBlocks"
+	}
+	rawBlock, err := ioutil.ReadFile(filepath.Join(blockPath, "t"+strconv.Itoa(int(p.GetNextBlockNum()))+".block"))
 	if err != nil {
 		return nil, err
 	}
@@ -214,9 +220,13 @@ func (p *TlePeer) Start() {
 
 func GetGenesisBlock() *common.Block {
 	// TODO get from somewhere else.
-	rawBlock0, err := ioutil.ReadFile("tmpBlocks/t0.block")
+	blockPath := os.Getenv("BLOCK_PATH")
+	if blockPath == "" {
+		blockPath = "tmpBlocks"
+	}
+	rawBlock0, err := ioutil.ReadFile(filepath.Join(blockPath, "t0.block"))
 	if err != nil {
-		panic("read genesis block error")
+		panic(fmt.Sprintf("read genesis block error, err: %v, blockPath: %s", err, blockPath))
 	}
 	fmt.Println("Finish reading genesis block!!!")
 	genesisBlock, err := protoutil.UnmarshalBlock(rawBlock0)

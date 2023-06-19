@@ -7,18 +7,13 @@
  "securityVersion": 1,
  "mounts": [
     {
-        "source": "/project/src/github.com/hyperledger/fabric/sampleconfig/",
-        "target": "/project/src/github.com/hyperledger/fabric/sampleconfig/",
-        "type": "hostfs"
-    },
-    {
         "source": "/project/",
         "target": "/project/",
         "type": "hostfs"
     },
     {
-        "source": "/project/src/github.com/hyperledger/fabric-private-chaincode/tle_go/tmpBlocks",
-        "target": "tmpBlocks",
+        "source": "/usr/local/bin",
+        "target": "/usr/local/bin",
         "type": "hostfs"
     },
     {
@@ -46,15 +41,15 @@
         "fromHost": true
     },
     {
-        "name": "GO_ENV_GOPATH",
+        "name": "CORE_CONFIG_PATH",
         "fromHost": true
     },
     {
-        "name": "GO_ENV_GOMOD",
+        "name": "DEV_PATH",
         "fromHost": true
     },
     {
-        "name": "FPC_PATH",
+        "name": "BLOCK_PATH",
         "fromHost": true
     }
 ]
