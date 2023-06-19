@@ -23,9 +23,21 @@ ENV OE_SIMULATION=${OE_SIMULATION}
 ARG CAAS_PORT=50051
 ARG CC_PATH="/usr/local/bin"
 
-COPY tle-bundle ${CC_PATH}/chaincode
+ENV CORE_CONFIG_PATH="/usr/local/bin/core.yaml"
+COPY core.yaml ${CORE_CONFIG_PATH}
+
+ENV DEV_PATH="/usr/local/bin/sampleconfig"
+COPY sample-fabric-config ${DEV_PATH}
+
+ENV BLOCK_PATH="/usr/local/bin/tmpBlocks/"
+COPY tmpBlocks ${BLOCK_PATH}
+
+COPY tle-bundle ${CC_PATH}/tle
+COPY client ${CC_PATH}/client
 
 WORKDIR ${CC_PATH}
 EXPOSE ${CAAS_PORT}
+EXPOSE 50051
 
-CMD ["chaincode"]
+# CMD ["tle"]
+CMD ["sleep", "infinity"]

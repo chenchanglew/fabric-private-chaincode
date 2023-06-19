@@ -4,7 +4,7 @@ FROM golang:1.17-alpine
 # Set the working directory inside the container
 WORKDIR /app
 
-COPY ../ .
+COPY . .
 
 # Set the entry point for the container
 CMD ["sleep", "infinity"]
