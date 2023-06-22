@@ -130,7 +130,8 @@ func (e *EncryptionContextImpl) Conceal(function string, args []string) (string,
 
 	// prepare CleartextChaincodeRequest
 	ccRequest := &protos.CleartextChaincodeRequest{
-		Input: &peer.ChaincodeInput{Args: bytes},
+		Input:            &peer.ChaincodeInput{Args: bytes},
+		MerkleRootHashes: nil,
 	}
 	logger.Debugf("prepping chaincode params: %s", ccRequest)
 

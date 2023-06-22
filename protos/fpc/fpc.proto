@@ -93,6 +93,7 @@ message InitEnclaveMessage {
 message CleartextChaincodeRequest {
     // the function and args to invoke
     protos.ChaincodeInput input = 1;
+    repeated bytes merkle_root_hashes = 2;
 }
 
 message ChaincodeRequestMessage {
