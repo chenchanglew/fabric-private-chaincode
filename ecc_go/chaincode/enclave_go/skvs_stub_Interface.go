@@ -22,7 +22,7 @@ type SkvsStubInterface struct {
 }
 
 func NewSkvsStubInterface(stub shim.ChaincodeStubInterface, input *pb.ChaincodeInput, rwset *readWriteSet, sep StateEncryptionFunctions) shim.ChaincodeStubInterface {
-	logger.Warning("==== Get New Skvs Interface =====")
+	logger.Debugf("===== Creating New Skvs Interface =====")
 	fpcStub := NewFpcStubInterface(stub, input, rwset, sep)
 	skvsStub := SkvsStubInterface{fpcStub.(*FpcStubInterface), map[string][]byte{}, map[string][]byte{}, "SKVS"}
 	err := skvsStub.InitSKVS()
@@ -33,8 +33,6 @@ func NewSkvsStubInterface(stub shim.ChaincodeStubInterface, input *pb.ChaincodeI
 }
 
 func (s *SkvsStubInterface) InitSKVS() error {
-	logger.Warningf(" === Initializing SKVS === ")
-
 	// get current state, this will only operate once
 	encValue, err := s.GetPublicState(s.key)
 	if err != nil {
@@ -42,13 +40,13 @@ func (s *SkvsStubInterface) InitSKVS() error {
 	}
 
 	if len(encValue) == 0 {
-		logger.Warningf("SKVS is empty, Initiating.")
+		logger.Debugf("SKVS is empty, Initiating.")
 	} else {
 		value, err := s.sep.DecryptState(encValue)
 		if err != nil {
 			return err
 		}
-		logger.Warningf("SKVS has default value, loading current value.")
+		logger.Debugf("SKVS has default value, loading current value.")
 
 		err = json.Unmarshal(value, &s.allDataOld)
 		err = json.Unmarshal(value, &s.allDataNew)
@@ -57,24 +55,18 @@ func (s *SkvsStubInterface) InitSKVS() error {
 			return err
 		}
 	}
-
-	logger.Warningf("SKVS Init finish, allDataOld: %s, allDataNew: %s", s.allDataOld, s.allDataNew)
 	return nil
 }
 
 func (s *SkvsStubInterface) GetState(key string) ([]byte, error) {
-	logger.Warningf("Calling Get State (Start), key: %s, alldataOld: %s", key, s.allDataOld)
 	value, found := s.allDataOld[key]
 	if found != true {
 		return nil, errors.New("skvs allDataOld key not found")
 	}
-	logger.Warningf("Calling Get State (End), key: %s, value: %x", key, value)
 	return value, nil
 }
 
 func (s *SkvsStubInterface) PutState(key string, value []byte) error {
-	logger.Warningf("Calling Put State (Start), key: %s, value: %x, alldata: %s", key, value, s.allDataNew)
-
 	s.allDataNew[key] = value
 	byteAllData, err := json.Marshal(s.allDataNew)
 	if err != nil {
@@ -84,7 +76,6 @@ func (s *SkvsStubInterface) PutState(key string, value []byte) error {
 	if err != nil {
 		return err
 	}
-	logger.Warningf("Calling Put State (End), put encValue: %x", encValue)
 
 	return s.PutPublicState(s.key, encValue)
 }
