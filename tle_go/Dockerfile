@@ -39,5 +39,5 @@ WORKDIR ${CC_PATH}
 EXPOSE ${CAAS_PORT}
 EXPOSE 50051
 
-# CMD ["tle"]
-CMD ["sleep", "infinity"]
+CMD ["tle"]
+# CMD ["sleep", "infinity"]
