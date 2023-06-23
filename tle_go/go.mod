@@ -5,13 +5,15 @@ go 1.17
 require (
 	github.com/hyperledger/fabric v1.4.0-rc1.0.20201118191903-ec81f3e74fa1
 	github.com/hyperledger/fabric-protos-go v0.2.0
+	github.com/pkg/errors v0.9.1
 	github.com/spf13/viper v1.3.2
 	github.com/stretchr/testify v1.8.1
 	google.golang.org/grpc v1.55.0
 	google.golang.org/protobuf v1.30.0
 )
 
-replace github.com/hyperledger/fabric => ../../fabric
+// replace github.com/hyperledger/fabric => ../../fabric
+replace github.com/hyperledger/fabric => github.com/Flamewind97/fabric v0.0.0-20230622161334-eae14fa46d72
 
 require (
 	github.com/Azure/go-ansiterm v0.0.0-20170929234023-d6e3b3328b78 // indirect
@@ -55,7 +57,6 @@ require (
 	github.com/opencontainers/runc v1.0.0-rc8 // indirect
 	github.com/pelletier/go-toml v1.8.0 // indirect
 	github.com/pierrec/lz4 v2.5.0+incompatible // indirect
-	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/rcrowley/go-metrics v0.0.0-20181016184325-3113b8401b8a // indirect
 	github.com/sirupsen/logrus v1.4.2 // indirect
