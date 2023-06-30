@@ -9,7 +9,10 @@ package crypto
 
 import (
 	"encoding/base64"
+	"encoding/hex"
 	"fmt"
+	"os"
+	"strings"
 
 	"github.com/hyperledger/fabric-private-chaincode/internal/protos"
 	"github.com/hyperledger/fabric-private-chaincode/internal/utils"
@@ -105,7 +108,28 @@ func (e *EncryptionContextImpl) Reveal(signedResponseBytesB64 []byte) ([]byte, e
 	return clearResponseBytes, nil
 }
 
+func parseMerkleRoot(args *[]string) ([][]byte, error) {
+	useMerkle := os.Getenv("FPC_Merkle_Solution")
+	if useMerkle != "True" {
+		return nil, nil
+	}
+
+	merkleRootCombine := (*args)[len(*args)-1]
+	merkleRootStrs := strings.Split(merkleRootCombine, "|")
+	merkleRootHashes := make([][]byte, len(merkleRootStrs))
+	for i, merkleRootStr := range merkleRootStrs {
+		data, err := hex.DecodeString(merkleRootStr)
+		if err != nil {
+			return nil, err
+		}
+		merkleRootHashes[i] = data
+	}
+	*args = (*args)[:len(*args)-1]
+	return merkleRootHashes, nil
+}
+
 func (e *EncryptionContextImpl) Conceal(function string, args []string) (string, error) {
+	merkleRootHashes, err := parseMerkleRoot(&args)
 	args = append([]string{function}, args...)
 	bytes := make([][]byte, len(args))
 	for i, v := range args {
@@ -131,7 +155,7 @@ func (e *EncryptionContextImpl) Conceal(function string, args []string) (string,
 	// prepare CleartextChaincodeRequest
 	ccRequest := &protos.CleartextChaincodeRequest{
 		Input:            &peer.ChaincodeInput{Args: bytes},
-		MerkleRootHashes: nil,
+		MerkleRootHashes: merkleRootHashes,
 	}
 	logger.Debugf("prepping chaincode params: %s", ccRequest)
 

@@ -36,12 +36,13 @@ type Provider interface {
 }
 
 // GetContract is the factory method for creating FPC Contract objects.
-//  Parameters:
-//  network is an initialized Fabric network object
-//  chaincodeID is the ID of the target chaincode
 //
-//  Returns:
-//  The contractImpl object
+//	Parameters:
+//	network is an initialized Fabric network object
+//	chaincodeID is the ID of the target chaincode
+//
+//	Returns:
+//	The contractImpl object
 func GetContract(p Provider, chaincodeID string) *contractImpl {
 	ercc := p.GetContract("ercc")
 	return New(p.GetContract(chaincodeID), ercc, nil, &crypto.EncryptionProviderImpl{
@@ -79,6 +80,11 @@ func (c *contractImpl) EvaluateTransaction(name string, args ...string) ([]byte,
 		return nil, err
 	}
 
+	err = AddMerkleRootToArgs(&args)
+	if err != nil {
+		return nil, err
+	}
+
 	encryptedRequest, err := ctx.Conceal(name, args)
 	if err != nil {
 		return nil, err
@@ -101,6 +107,11 @@ func (c *contractImpl) EvaluateTransaction(name string, args ...string) ([]byte,
 
 func (c *contractImpl) SubmitTransaction(name string, args ...string) ([]byte, error) {
 	ctx, err := c.ep.NewEncryptionContext()
+	if err != nil {
+		return nil, err
+	}
+
+	err = AddMerkleRootToArgs(&args)
 	if err != nil {
 		return nil, err
 	}
