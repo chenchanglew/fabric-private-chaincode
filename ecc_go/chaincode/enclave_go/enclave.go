@@ -13,6 +13,7 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"fmt"
+	"os"
 
 	"github.com/hyperledger/fabric-chaincode-go/shim"
 	"github.com/hyperledger/fabric-private-chaincode/ecc_go/chaincode/enclave_go/attestation"
@@ -166,6 +167,15 @@ func (e *EnclaveStub) ChaincodeInvoke(stub shim.ChaincodeStubInterface, chaincod
 	// we wrap the stub with our FpcStubInterface
 	fpcStub := e.newStubInterfaceFunc(stub, cleartextChaincodeRequest.GetInput(), rwset, e.ccKeys)
 	// fpcStub := NewFpcStubInterface(stub, cleartextChaincodeRequest.GetInput(), rwset, e.ccKeys)
+
+	if os.Getenv("FPC_Merkle_Solution") == "True" {
+		merkleRootHashes := cleartextChaincodeRequest.GetMerkleRootHashes()
+		fmt.Println("MerkleRootHashes are: ", merkleRootHashes)
+		// TODO: calling decide Merkle Root here, Q: how?
+		// Need to change type.
+		// x, err := fpcStub.(MerkleStubInterface)
+	}
+
 	ccResponse := e.ccRef.Invoke(fpcStub)
 
 	// marshal chaincode response

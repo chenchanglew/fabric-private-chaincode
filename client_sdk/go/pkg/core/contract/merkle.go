@@ -11,7 +11,7 @@ import (
 )
 
 func getPeerAddrs() ([]string, error) {
-	// TODO how to get peer address
+	// TODO how to get peer address, Q: How?
 	panic("Not implemented")
 }
 
@@ -23,7 +23,7 @@ func getMerkleRootFromPeer(peerAddr string) ([]byte, error) {
 	}
 	defer conn.Close()
 
-	// TODO get namespace without hardcoded
+	// TODO get namespace without hardcoded, Q: How?
 	namespace := "fpc-secret-keeper-go"
 
 	client := mtcs.NewMerkleServiceClient(conn)
