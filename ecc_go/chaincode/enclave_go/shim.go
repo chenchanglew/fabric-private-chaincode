@@ -10,6 +10,7 @@ package enclave_go
 import (
 	"github.com/golang/protobuf/ptypes/timestamp"
 	"github.com/hyperledger/fabric-chaincode-go/shim"
+	"github.com/hyperledger/fabric-private-chaincode/internal/protos"
 	"github.com/hyperledger/fabric-private-chaincode/internal/utils"
 	pb "github.com/hyperledger/fabric-protos-go/peer"
 )
@@ -21,7 +22,8 @@ type FpcStubInterface struct {
 	sep   StateEncryptionFunctions
 }
 
-func NewFpcStubInterface(stub shim.ChaincodeStubInterface, input *pb.ChaincodeInput, rwset *readWriteSet, sep StateEncryptionFunctions) shim.ChaincodeStubInterface {
+func NewFpcStubInterface(stub shim.ChaincodeStubInterface, chaincodeRequest *protos.CleartextChaincodeRequest, rwset *readWriteSet, sep StateEncryptionFunctions) shim.ChaincodeStubInterface {
+	input := chaincodeRequest.GetInput()
 	return &FpcStubInterface{
 		stub:  stub,
 		input: input,

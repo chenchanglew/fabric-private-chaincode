@@ -11,11 +11,15 @@ import (
 )
 
 func getPeerAddrs() ([]string, error) {
-	// TODO how to get peer address, Q: How?
-	panic("Not implemented")
+	// TODO get peer Address without hardcoded.
+	peerAddrs := []string{}
+	// peer1, peer2
+	peerAddrs = append(peerAddrs, "127.0.0.1:28884")
+	peerAddrs = append(peerAddrs, "127.0.0.1:28885")
+	return peerAddrs, nil
 }
 
-func getMerkleRootFromPeer(peerAddr string) ([]byte, error) {
+func getMerkleRootFromPeer(peerAddr string, namespace string) ([]byte, error) {
 	// TODO use secure communication to get merkleroot
 	conn, err := grpc.Dial(peerAddr, grpc.WithInsecure())
 	if err != nil {
@@ -23,18 +27,15 @@ func getMerkleRootFromPeer(peerAddr string) ([]byte, error) {
 	}
 	defer conn.Close()
 
-	// TODO get namespace without hardcoded, Q: How?
-	namespace := "fpc-secret-keeper-go"
-
 	client := mtcs.NewMerkleServiceClient(conn)
 	response, err := client.GetMerkleRoot(context.Background(), &mtcs.MerkleRootRequest{Namespace: namespace})
 	if err != nil {
 		return nil, err
 	}
-	return response.GetData(), nil
+	return proto.Marshal(response)
 }
 
-func GetMerkleRoots() (string, error) {
+func GetMerkleRoots(namespace string) (string, error) {
 	peerAddrs, err := getPeerAddrs()
 	if err != nil {
 		return "", err
@@ -42,7 +43,7 @@ func GetMerkleRoots() (string, error) {
 	merkleRoots := make([]string, len(peerAddrs))
 
 	for i, p := range peerAddrs {
-		m, err := getMerkleRootFromPeer(p)
+		m, err := getMerkleRootFromPeer(p, namespace)
 		if err != nil {
 			return "", err
 		}
@@ -51,13 +52,13 @@ func GetMerkleRoots() (string, error) {
 	return strings.Join(merkleRoots, "|"), nil
 }
 
-func AddMerkleRootToArgs(args *[]string) error {
+func AddMerkleRootToArgs(args *[]string, namespace string) error {
 	useMerkle := os.Getenv("FPC_Merkle_Solution")
 	if useMerkle != "True" {
 		return nil
 	}
 
-	merkleRootStrs, err := GetMerkleRoots()
+	merkleRootStrs, err := GetMerkleRoots(namespace)
 	if err != nil {
 		return err
 	}
