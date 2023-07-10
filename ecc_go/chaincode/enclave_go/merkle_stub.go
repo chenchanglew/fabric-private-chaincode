@@ -11,12 +11,10 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/golang/protobuf/proto"
 	"github.com/hyperledger/fabric-chaincode-go/shim"
 	"github.com/hyperledger/fabric-private-chaincode/internal/protos"
 	pb "github.com/hyperledger/fabric-protos-go/peer"
 	"github.com/hyperledger/fabric/core/endorser"
-	merkle "github.com/hyperledger/fabric/core/ledger/kvledger/txmgmt/mtreecomp/mtreegrpc"
 	"github.com/hyperledger/fabric/core/ledger/kvledger/txmgmt/mtreecomp/mtreeimpl"
 	"github.com/hyperledger/fabric/core/ledger/kvledger/txmgmt/mtreecomp/types"
 	"github.com/pkg/errors"
@@ -44,19 +42,20 @@ func (s *MerkleStubInterface) getUniqueHashes(merkleRootHashes [][]byte) map[str
 	rootsMap := map[string][]byte{}
 
 	for _, signedRootBytes := range merkleRootHashes {
-		var signedRoot merkle.SignedMerkleRootResponse
-		err := proto.Unmarshal(signedRootBytes, &signedRoot)
+		var signedRoot types.SignedMerkleRootResponse
+		err := json.Unmarshal(signedRootBytes, &signedRoot)
 		if err != nil {
 			fmt.Println("Proto failed to Unmarshal signedRootbytes to SignedMerkleRootResponse")
 		}
-		merkleBytes := signedRoot.GetSerializedMerkleRootResponse()
-		signature := signedRoot.GetSignature()
-		var merkleRootResponse merkle.MerkleRootResponse
-		err = proto.Unmarshal(merkleBytes, &merkleRootResponse)
+		merkleBytes := signedRoot.SerializedMerkleRootResponse
+		signature := signedRoot.Signature
+
+		var merkleRootResponse types.MerkleRootResponse
+		err = json.Unmarshal(merkleBytes, &merkleRootResponse)
 		if err != nil {
 			fmt.Println("Proto failed to Unmarshal merkleBytes to MerkleRootResponse")
 		}
-		merkleRoot := merkleRootResponse.GetData()
+		merkleRoot := merkleRootResponse.Data
 
 		// TODO verify signature here
 		hexSignature := hex.EncodeToString(signature)

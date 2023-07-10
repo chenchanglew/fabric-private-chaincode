@@ -1,38 +1,41 @@
 package contract
 
 import (
-	"context"
 	"encoding/hex"
+	"io/ioutil"
+	"log"
+	"net/http"
 	"os"
 	"strings"
-
-	mtcs "github.com/hyperledger/fabric/core/ledger/kvledger/txmgmt/mtreecomp/mtreegrpc"
-	"google.golang.org/grpc"
 )
 
 func getPeerAddrs() ([]string, error) {
 	// TODO get peer Address without hardcoded.
 	peerAddrs := []string{}
 	// peer1, peer2
-	peerAddrs = append(peerAddrs, "127.0.0.1:28884")
-	peerAddrs = append(peerAddrs, "127.0.0.1:28885")
+	peerAddrs = append(peerAddrs, "http://127.0.0.1:28884")
+	peerAddrs = append(peerAddrs, "http://127.0.0.1:28885")
 	return peerAddrs, nil
 }
 
 func getMerkleRootFromPeer(peerAddr string, namespace string) ([]byte, error) {
 	// TODO use secure communication to get merkleroot
-	conn, err := grpc.Dial(peerAddr, grpc.WithInsecure())
+	request := peerAddr + "/merkleRoot?namespace=" + namespace
+	response, err := http.Get(request)
 	if err != nil {
 		return nil, err
 	}
-	defer conn.Close()
+	defer response.Body.Close()
 
-	client := mtcs.NewMerkleServiceClient(conn)
-	response, err := client.GetMerkleRoot(context.Background(), &mtcs.MerkleRootRequest{Namespace: namespace})
+	body, err := ioutil.ReadAll(response.Body)
 	if err != nil {
 		return nil, err
 	}
-	return proto.Marshal(response)
+
+	if response.StatusCode != http.StatusOK {
+		log.Fatalf("Request failed with status code %d", response.StatusCode)
+	}
+	return body, nil
 }
 
 func GetMerkleRoots(namespace string) (string, error) {
