@@ -9,7 +9,6 @@ SPDX-License-Identifier: Apache-2.0
 package contract
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/hyperledger/fabric-private-chaincode/internal/crypto"
@@ -81,7 +80,7 @@ func (c *contractImpl) EvaluateTransaction(name string, args ...string) ([]byte,
 		return nil, err
 	}
 
-	err = AddMerkleRootToArgs(&args)
+	err = AddMerkleRootToArgs(&args, c.target.Name())
 	if err != nil {
 		return nil, err
 	}
@@ -112,10 +111,7 @@ func (c *contractImpl) SubmitTransaction(name string, args ...string) ([]byte, e
 		return nil, err
 	}
 
-	namespace := c.target.Name()
-	fmt.Println("In CLIENT_SDK, contract.go, c.target.name =", namespace)
-	namespace = "fpc-secret-keeper-go"
-	err = AddMerkleRootToArgs(&args, namespace)
+	err = AddMerkleRootToArgs(&args, c.target.Name())
 	if err != nil {
 		return nil, err
 	}

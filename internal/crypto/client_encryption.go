@@ -12,6 +12,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 
 	"github.com/hyperledger/fabric-private-chaincode/internal/protos"
@@ -109,8 +110,8 @@ func (e *EncryptionContextImpl) Reveal(signedResponseBytesB64 []byte) ([]byte, e
 }
 
 func parseMerkleRoot(args *[]string) ([][]byte, error) {
-	useMerkle := os.Getenv("FPC_Merkle_Solution")
-	if useMerkle != "True" {
+	useMerkle, _ := strconv.ParseBool(os.Getenv("FPC_MERKLE_SOLUTION"))
+	if !useMerkle {
 		return nil, nil
 	}
 
@@ -130,6 +131,9 @@ func parseMerkleRoot(args *[]string) ([][]byte, error) {
 
 func (e *EncryptionContextImpl) Conceal(function string, args []string) (string, error) {
 	merkleRootHashes, err := parseMerkleRoot(&args)
+	if err != nil {
+		return "", err
+	}
 	args = append([]string{function}, args...)
 	bytes := make([][]byte, len(args))
 	for i, v := range args {

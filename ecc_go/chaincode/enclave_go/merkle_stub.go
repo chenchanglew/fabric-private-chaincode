@@ -45,7 +45,7 @@ func (s *MerkleStubInterface) getUniqueHashes(merkleRootHashes [][]byte) map[str
 		var signedRoot types.SignedMerkleRootResponse
 		err := json.Unmarshal(signedRootBytes, &signedRoot)
 		if err != nil {
-			fmt.Println("Proto failed to Unmarshal signedRootbytes to SignedMerkleRootResponse")
+			logger.Errorf("Proto failed to Unmarshal signedRootbytes to SignedMerkleRootResponse")
 		}
 		merkleBytes := signedRoot.SerializedMerkleRootResponse
 		signature := signedRoot.Signature
@@ -53,7 +53,7 @@ func (s *MerkleStubInterface) getUniqueHashes(merkleRootHashes [][]byte) map[str
 		var merkleRootResponse types.MerkleRootResponse
 		err = json.Unmarshal(merkleBytes, &merkleRootResponse)
 		if err != nil {
-			fmt.Println("Proto failed to Unmarshal merkleBytes to MerkleRootResponse")
+			logger.Errorf("Proto failed to Unmarshal merkleBytes to MerkleRootResponse")
 		}
 		merkleRoot := merkleRootResponse.Data
 
@@ -72,9 +72,10 @@ func (s *MerkleStubInterface) InitMerkleStub(merkleRootHashes [][]byte) error {
 		key := hex.EncodeToString(value)
 		counterMap[key]++
 	}
+	logger.Debugf("counterMaps are: %v", counterMap)
 
 	// TODO: Use real total number of peers, instead of hardcoded
-	totalPeers := 1
+	totalPeers := 2
 	threshold := (totalPeers * 2) / 3
 
 	// Decide on the majority, and make sure it is more than 2/3 peers.
@@ -87,6 +88,7 @@ func (s *MerkleStubInterface) InitMerkleStub(merkleRootHashes [][]byte) error {
 			s.merkleRoot = merkleRoot
 		}
 	}
+	logger.Debugf("agree on merkle Root: %x", s.merkleRoot)
 
 	return nil
 }
@@ -116,25 +118,21 @@ func (s *MerkleStubInterface) GetState(key string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	data, err := s.sep.DecryptState(encValue)
-	if err != nil {
-		return nil, err
-	}
 
 	c := types.KVScontent{
 		Key:   key,
-		Value: data,
+		Value: encValue,
 	}
 
 	// verify merklepath
 	valid, err := mtreeimpl.VerifyMerklePath(c, mpath, s.merkleRoot, nil)
 	if !valid {
-		return nil, errors.New("Verify MerklePath Failed, merkleRoot not match.")
+		return nil, fmt.Errorf("verify MerklePath Failed, merkleRoot not match expected: %x", s.merkleRoot)
 	}
 	if err != nil {
 		return nil, err
 	}
-	return data, nil
+	return s.sep.DecryptState(encValue)
 }
 
 func (s *MerkleStubInterface) PutState(key string, value []byte) error {

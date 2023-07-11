@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 )
 
@@ -13,8 +14,8 @@ func getPeerAddrs() ([]string, error) {
 	// TODO get peer Address without hardcoded.
 	peerAddrs := []string{}
 	// peer1, peer2
-	peerAddrs = append(peerAddrs, "http://127.0.0.1:28884")
-	peerAddrs = append(peerAddrs, "http://127.0.0.1:28885")
+	peerAddrs = append(peerAddrs, "http://127.0.0.1:21004")
+	peerAddrs = append(peerAddrs, "http://127.0.0.1:21011")
 	return peerAddrs, nil
 }
 
@@ -56,8 +57,8 @@ func GetMerkleRoots(namespace string) (string, error) {
 }
 
 func AddMerkleRootToArgs(args *[]string, namespace string) error {
-	useMerkle := os.Getenv("FPC_Merkle_Solution")
-	if useMerkle != "True" {
+	useMerkle, _ := strconv.ParseBool(os.Getenv("FPC_MERKLE_SOLUTION"))
+	if !useMerkle {
 		return nil
 	}
 
