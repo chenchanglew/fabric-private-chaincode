@@ -9,3 +9,5 @@ cscope.*
 common/protos
 internal/protos
 coverage.out
+
+.DS_Store
