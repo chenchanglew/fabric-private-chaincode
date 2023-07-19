@@ -13,9 +13,16 @@ import (
 func getPeerAddrs() ([]string, error) {
 	// TODO get peer Address without hardcoded.
 	peerAddrs := []string{}
-	// peer1, peer2
-	peerAddrs = append(peerAddrs, "http://127.0.0.1:21004")
-	peerAddrs = append(peerAddrs, "http://127.0.0.1:21011")
+
+	envAddrs := os.Getenv("peerAddrs")
+	if envAddrs != "" {
+		peerAddrs = strings.Split(envAddrs, "|")
+	} else {
+		peerAddrs = append(peerAddrs, "http://127.0.0.1:21004") // Org1
+		peerAddrs = append(peerAddrs, "http://127.0.0.1:21011") // Org2
+		// peerAddrs = append(peerAddrs, "http://127.0.0.1:21018") // Org3
+		// peerAddrs = append(peerAddrs, "http://127.0.0.1:21025") // Org4
+	}
 	return peerAddrs, nil
 }
 
