@@ -4,7 +4,7 @@ go 1.17
 
 require (
 	github.com/hyperledger/fabric v1.4.0-rc1.0.20201118191903-ec81f3e74fa1
-	github.com/hyperledger/fabric-protos-go v0.2.0
+	github.com/hyperledger/fabric-protos-go v0.0.0-20201028172056-a3136dde2354
 	github.com/pkg/errors v0.9.1
 	github.com/spf13/viper v1.3.2
 	github.com/stretchr/testify v1.8.1
@@ -78,6 +78,7 @@ require (
 	golang.org/x/text v0.9.0 // indirect
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20230526203410-71b5a4ffd15e // indirect
+	gopkg.in/check.v1 v1.0.0-20190902080502-41f04d3bba15 // indirect
 	gopkg.in/tomb.v1 v1.0.0-20141024135613-dd632973f1e7 // indirect
 	gopkg.in/yaml.v2 v2.3.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
