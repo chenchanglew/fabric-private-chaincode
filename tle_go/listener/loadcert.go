@@ -1,4 +1,4 @@
-package main
+package listener
 
 import (
 	"crypto/tls"
@@ -9,9 +9,9 @@ import (
 	"google.golang.org/grpc/credentials"
 )
 
-func loadTLSCredentials() (credentials.TransportCredentials, error) {
+func loadTLSCredentials(caCertPath string) (credentials.TransportCredentials, error) {
 	// Load certificate of the CA who signed server's certificate
-	pemServerCA, err := ioutil.ReadFile("ca/ca-certs.pem")
+	pemServerCA, err := ioutil.ReadFile(caCertPath)
 	if err != nil {
 		return nil, err
 	}

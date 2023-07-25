@@ -4,6 +4,7 @@ go 1.17
 
 require (
 	github.com/hyperledger/fabric v1.4.0-rc1.0.20201118191903-ec81f3e74fa1
+	github.com/hyperledger/fabric-config v0.0.7
 	github.com/hyperledger/fabric-protos-go v0.0.0-20201028172056-a3136dde2354
 	github.com/pkg/errors v0.9.1
 	github.com/spf13/viper v1.3.2

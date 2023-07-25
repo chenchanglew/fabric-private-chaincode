@@ -6,7 +6,7 @@ SPDX-License-Identifier: Apache-2.0
 
 // Package identity provides a set of interfaces for identity-related operations.
 
-package main
+package listener
 
 // Signer is an interface which wraps the Sign method.
 //
