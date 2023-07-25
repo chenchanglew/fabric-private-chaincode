@@ -96,6 +96,10 @@ func ListenBlock(channelID string, serverAddr string, seek int, quiet bool, caCe
 		fmt.Println("failed to load config:", err)
 		os.Exit(1)
 	}
+	// fmt.Println("conf:", conf)
+	fmt.Println("localMSPDir:", conf.General.LocalMSPDir)
+	fmt.Println("BCCSP:", conf.General.BCCSP)
+	fmt.Println("localMSPID:", conf.General.LocalMSPID)
 
 	// Load local MSP
 	mspConfig, err := msp.GetLocalMspConfig(conf.General.LocalMSPDir, conf.General.BCCSP, conf.General.LocalMSPID)
@@ -103,6 +107,8 @@ func ListenBlock(channelID string, serverAddr string, seek int, quiet bool, caCe
 		fmt.Println("Failed to load MSP config:", err)
 		os.Exit(0)
 	}
+	fmt.Println("mspConfig:", mspConfig)
+	fmt.Println("factoryGetDefault:", factory.GetDefault())
 	err = mspmgmt.GetLocalMSP(factory.GetDefault()).Setup(mspConfig)
 	if err != nil { // Handle errors reading the config file
 		fmt.Println("Failed to initialize local MSP:", err)

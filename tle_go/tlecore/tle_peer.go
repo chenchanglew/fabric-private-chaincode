@@ -3,12 +3,6 @@ package tlecore
 import (
 	"crypto/sha256"
 	"fmt"
-	"io/ioutil"
-	"os"
-	"path/filepath"
-	"strconv"
-	"sync"
-	"time"
 
 	"github.com/hyperledger/fabric-protos-go/common"
 	"github.com/hyperledger/fabric/common/policies"
@@ -20,9 +14,8 @@ import (
 )
 
 type TlePeer struct {
-	tleState     *Tlestate
-	nextBlockNum uint
-	mutex        sync.Mutex
+	tleState      *Tlestate
+	blockListener BlockListener
 
 	channelName string
 	lc          *committer.LedgerCommitter
@@ -75,13 +68,13 @@ func (p *TlePeer) vsccExtractRwsetRaw(block *common.Block, txPosition int, actio
 }
 
 func (p *TlePeer) UpdateState(block *common.Block) error {
-	for tIdx, _ := range block.Data.Data {
+	for tIdx := range block.Data.Data {
 		// TODO: continue if current txn is invalid.
 		txsfltr := ValidationFlags(block.Metadata.Metadata[common.BlockMetadataIndex_TRANSACTIONS_FILTER])
 		fmt.Printf("blockNum %d, tIdx: %d, validationCode: %v\n", tIdx, block.Header.Number, txsfltr.Flag(tIdx))
 		if txsfltr.IsInvalid(tIdx) {
 			fmt.Println("The current txn is not valid!")
-			// continue
+			continue
 		}
 
 		// extract rwset
@@ -118,26 +111,12 @@ func (p *TlePeer) UpdateState(block *common.Block) error {
 	return nil
 }
 
-func (p *TlePeer) GetBlock() (*common.Block, error) {
-	// Simulating data retrieval from somewhere
-	fmt.Printf("Start to get block num: %d\n", p.GetNextBlockNum())
-	blockPath := os.Getenv("BLOCK_PATH")
-	if blockPath == "" {
-		blockPath = "tmpBlocks"
-	}
-	rawBlock, err := ioutil.ReadFile(filepath.Join(blockPath, "t"+strconv.Itoa(int(p.GetNextBlockNum()))+".block"))
-	if err != nil {
-		return nil, err
-	}
-	return protoutil.UnmarshalBlock(rawBlock)
-}
-
-func (p *TlePeer) ProcessBlock(block *common.Block) error {
-	err := VerifyBlock(p.policyMgr, []byte(p.channelName), uint64(p.GetNextBlockNum()), block)
+func (p *TlePeer) ProcessBlock(block *common.Block, blockNum int) error {
+	err := VerifyBlock(p.policyMgr, []byte(p.channelName), uint64(blockNum), block)
 	if err != nil {
 		return err
 	}
-	fmt.Printf("--- Verify Block %d success, start verify txn ---\n", p.GetNextBlockNum())
+	fmt.Printf("--- Verify Block %d success, start verify txn ---\n", uint64(blockNum))
 	err = p.validator.Validate(block)
 	if err != nil {
 		return err
@@ -149,24 +128,10 @@ func (p *TlePeer) ProcessBlock(block *common.Block) error {
 	}
 
 	// update state
-	p.IncrementNextBlockNum()
 	return p.UpdateState(block)
 }
 
-func (p *TlePeer) GetNextBlockNum() uint {
-	p.mutex.Lock()
-	defer p.mutex.Unlock()
-	return p.nextBlockNum
-}
-
-func (p *TlePeer) IncrementNextBlockNum() {
-	p.mutex.Lock()
-	defer p.mutex.Unlock()
-	p.nextBlockNum += 1
-}
-
-func (p *TlePeer) InitFabricPart() func() {
-	genesisBlock := GetGenesisBlock()
+func (p *TlePeer) InitFabricPart(genesisBlock *common.Block) func() {
 	peerInstance, cleanup := peer.NewFabricPeer()
 
 	err := InitializeFabricPeer(peerInstance)
@@ -191,56 +156,42 @@ func (p *TlePeer) InitFabricPart() func() {
 	p.policyMgr = policyMgr
 	p.validator = validator
 	p.channelName = channelName
-
 	return cleanup
 }
 
 func (p *TlePeer) Start() {
-	cleanup := p.InitFabricPart()
+	genesisBlock, err := p.blockListener.GetNextBlock()
+	if err != nil {
+		fmt.Println("Get genesis block failed: ", err)
+	}
+	p.blockListener.NotifySuccess()
+
+	cleanup := p.InitFabricPart(genesisBlock)
 	defer cleanup()
 
-	waitTime := 1
 	for {
-		// wait several second to update one block
-		time.Sleep(time.Duration(waitTime) * time.Second)
-
-		block, err := p.GetBlock()
+		blocknum := p.blockListener.GetNextBlockNum()
+		block, err := p.blockListener.GetNextBlock()
 		if err != nil {
 			fmt.Printf("TlePeer GetBlock Failed, %v\n", err)
-			waitTime = waitTime * 2
 			continue
 		}
-		err = p.ProcessBlock(block)
+		err = p.ProcessBlock(block, blocknum)
 		if err != nil {
 			fmt.Printf("TlePeer Process Block error, %v\n", err)
+			continue
 		}
-		waitTime = 1
+		p.blockListener.NotifySuccess()
 	}
-}
-
-func GetGenesisBlock() *common.Block {
-	// TODO get from somewhere else.
-	blockPath := os.Getenv("BLOCK_PATH")
-	if blockPath == "" {
-		blockPath = "tmpBlocks"
-	}
-	rawBlock0, err := ioutil.ReadFile(filepath.Join(blockPath, "t0.block"))
-	if err != nil {
-		panic(fmt.Sprintf("read genesis block error, err: %v, blockPath: %s", err, blockPath))
-	}
-	fmt.Println("Finish reading genesis block!!!")
-	genesisBlock, err := protoutil.UnmarshalBlock(rawBlock0)
-	if err != nil {
-		panic("Unmarshal genesis block error")
-	}
-	return genesisBlock
 }
 
 func ServePeer(tleState *Tlestate) {
 	// TODO change the logic here.
+	blockListener := NewFileBlockGetter()
+	// blockListener := NewOrdererBlockGetter()
 	peer := &TlePeer{
-		tleState:     tleState,
-		nextBlockNum: 1,
+		tleState:      tleState,
+		blockListener: blockListener,
 	}
 	go peer.Start()
 }
