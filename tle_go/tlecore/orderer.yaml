@@ -28,7 +28,7 @@ General:
     ServerTimeout: 20s
   BootstrapMethod: file
   BootstrapFile: /Users/lew/go/src/github.com/hyperledger/fabric-private-chaincode/samples/deployment/fabric-smart-client/the-simple-testing-network/testdata/fabric.default/systemchannel_block.pb
-  LocalMSPDir: /project/src/github.com/hyperledger/fabric-private-chaincode/samples/deployment/fabric-smart-client/the-simple-testing-network/testdata/fabric.default/crypto/ordererOrganizations/example.com/orderers/orderer.example.com/msp
+  LocalMSPDir: /Users/lew/go/src/github.com/hyperledger/fabric-private-chaincode/samples/deployment/fabric-smart-client/the-simple-testing-network/testdata/fabric.default/crypto/ordererOrganizations/example.com/orderers/orderer.example.com/msp
   LocalMSPID: OrdererMSP
   Profile:
     Enabled: false

@@ -2,6 +2,7 @@ package tlecore
 
 import (
 	"crypto/sha256"
+	"encoding/base64"
 	"fmt"
 
 	"github.com/hyperledger/fabric-protos-go/common"
@@ -132,7 +133,8 @@ func (p *TlePeer) ProcessBlock(block *common.Block, blockNum int) error {
 }
 
 func (p *TlePeer) InitFabricPart(genesisBlock *common.Block) func() {
-	peerInstance, cleanup := peer.NewFabricPeer()
+	// peerInstance, cleanup := peer.NewFabricPeer()
+	peerInstance, cleanup := peer.NewTestPeerLight()
 
 	err := InitializeFabricPeer(peerInstance)
 	if err != nil {
@@ -161,6 +163,8 @@ func (p *TlePeer) InitFabricPart(genesisBlock *common.Block) func() {
 
 func (p *TlePeer) Start() {
 	genesisBlock, err := p.blockListener.GetNextBlock()
+	sDec, _ := base64.StdEncoding.DecodeString("AA==")
+	genesisBlock.Metadata.Metadata[2] = sDec
 	if err != nil {
 		fmt.Println("Get genesis block failed: ", err)
 	}
@@ -185,13 +189,17 @@ func (p *TlePeer) Start() {
 	}
 }
 
-func ServePeer(tleState *Tlestate) {
+func ServePeer(tleState *Tlestate, blockListener BlockListener) {
 	// TODO change the logic here.
-	blockListener := NewFileBlockGetter()
-	// blockListener := NewOrdererBlockGetter()
 	peer := &TlePeer{
 		tleState:      tleState,
 		blockListener: blockListener,
 	}
 	go peer.Start()
+}
+
+type BlockListener interface {
+	GetNextBlockNum() int
+	GetNextBlock() (*common.Block, error)
+	NotifySuccess() error
 }

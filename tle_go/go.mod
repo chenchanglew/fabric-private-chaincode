@@ -14,7 +14,7 @@ require (
 )
 
 // replace github.com/hyperledger/fabric => ../../fabric
-replace github.com/hyperledger/fabric => github.com/Flamewind97/fabric v0.0.0-20230622161334-eae14fa46d72
+replace github.com/hyperledger/fabric => github.com/Flamewind97/fabric v0.0.0-20230727155655-d2a858c57147
 
 require (
 	github.com/Azure/go-ansiterm v0.0.0-20170929234023-d6e3b3328b78 // indirect

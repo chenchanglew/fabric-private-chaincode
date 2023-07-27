@@ -1,6 +1,7 @@
 package tlecore
 
 import (
+	"encoding/base64"
 	"encoding/hex"
 	"fmt"
 	"io/ioutil"
@@ -8,8 +9,11 @@ import (
 	"runtime"
 	"strconv"
 	"testing"
+	"time"
 
+	"github.com/hyperledger/fabric-private-chaincode/tle_go/listener"
 	"github.com/hyperledger/fabric-private-chaincode/tle_go/mocks"
+	tleconfig "github.com/hyperledger/fabric-private-chaincode/tle_go/tlecore/config"
 	"github.com/hyperledger/fabric-protos-go/common"
 	pp "github.com/hyperledger/fabric-protos-go/peer"
 	configtxtest "github.com/hyperledger/fabric/common/configtx/test"
@@ -90,11 +94,97 @@ func SetupConfigTest(t *testing.T) {
 	})
 }
 
+// ONLY RUN THIS when ordered is running
+func TestOrdererGetBlock(t *testing.T) {
+	// setup config
+	configPath := "/Users/lew/go/src/github.com/hyperledger/fabric-private-chaincode/samples/deployment/fabric-smart-client/the-simple-testing-network/testdata/fabric.default/peers/Org1.Org1_peer_0/core.yaml"
+	tleconfig.SetupConfig(configPath)
+	defer viper.Reset()
+
+	// read genesis block
+	channelID := "testchannel"
+	serverAddr := "127.0.0.1:20000"
+	seek := -2    // -2 is load from oldest, -1 load from newest, other int -> load from the int.
+	quiet := true // true = only print block number, false = print whole block.
+	caCertPath := "/Users/lew/go/src/github.com/hyperledger/fabric-private-chaincode/samples/deployment/fabric-smart-client/the-simple-testing-network/testdata/fabric.default/crypto/ca-certs.pem"
+	blockChan := make(chan common.Block, 1)
+
+	go listener.ListenBlock(channelID, serverAddr, seek, quiet, caCertPath, blockChan)
+
+	var err error
+
+	// DIRTY HACK, MORE check need todo now.
+	block0 := <-blockChan
+	sDec, _ := base64.StdEncoding.DecodeString("AA==")
+	block0.Metadata.Metadata[2] = sDec
+
+	// initialize peer
+	peerInstance, cleanup := peer.NewTestPeerLight2(t)
+	defer cleanup()
+
+	err = InitializeFabricPeer(peerInstance)
+	require.NoError(t, err)
+
+	fmt.Println("---- Creating liftcycleValidation ----")
+	legacyLifecycleValidation, NewLifecycleValidation, dcip := createLifecycleValidation(peerInstance)
+	channelName := "testchannel"
+
+	/// test
+	// policyMgr := policies.PolicyManagerGetterFunc(peerInstance.GetPolicyManager)
+	// err = VerifyBlock(policyMgr, []byte("testchannel"), uint64(0), block0)
+	// require.NoError(t, err)
+
+	fmt.Println("---- Creating channel ----")
+	err = peerInstance.CreateChannel(channelName, &block0, dcip, legacyLifecycleValidation, NewLifecycleValidation)
+	require.NoError(t, err)
+	channel := peerInstance.Channel(channelName)
+	ledger := channel.Ledger()
+	lc := committer.NewLedgerCommitter(ledger)
+
+	policyMgr := policies.PolicyManagerGetterFunc(peerInstance.GetPolicyManager)
+
+	fmt.Println("---- Creating validator ----")
+	validator, err := CreateTxValidatorViaPeer(peerInstance, channelName, legacyLifecycleValidation, NewLifecycleValidation)
+	require.NoError(t, err)
+
+	curNum := 1
+	timeout := false
+	for {
+		select {
+		case block := <-blockChan:
+			blockX := block
+			fmt.Printf("---verifying block %d----\n", curNum)
+
+			err = VerifyBlock(policyMgr, []byte("testchannel"), uint64(curNum), &blockX)
+			require.NoError(t, err)
+
+			fmt.Printf("--- Verify Block %d success, start verify txn ---\n", curNum)
+
+			err = validator.Validate(&blockX)
+			require.NoError(t, err)
+
+			StoreBlock(lc, &blockX)
+
+			for tIdx, _ := range blockX.Data.Data {
+				flags := ValidationFlags(blockX.Metadata.Metadata[common.BlockMetadataIndex_TRANSACTIONS_FILTER])
+				require.Equal(t, flags.Flag(tIdx), pp.TxValidationCode_VALID)
+			}
+			curNum += 1
+		case <-time.After(3 * time.Second):
+			fmt.Println("No more new block, return")
+			timeout = true
+		}
+		if timeout {
+			break
+		}
+	}
+}
+
 func TestBunchValidation(t *testing.T) {
 	// setup config
 	configPath := "/Users/lew/go/src/github.com/hyperledger/fabric-private-chaincode/samples/deployment/fabric-smart-client/the-simple-testing-network/testdata/fabric.default/peers/Org1.Org1_peer_0/core.yaml"
 	blockDirectory := "../blocks/"
-	SetupConfig(configPath)
+	tleconfig.SetupConfig(configPath)
 	defer viper.Reset()
 
 	// read genesis block
@@ -104,8 +194,8 @@ func TestBunchValidation(t *testing.T) {
 	require.NoError(t, err)
 
 	// initialize peer
-	// peerInstance, cleanup := peer.NewTestPeerLight(t)
-	peerInstance, cleanup := peer.NewTestPeer2(t)
+	peerInstance, cleanup := peer.NewTestPeerLight2(t)
+	// peerInstance, cleanup := peer.NewTestPeer2(t)
 	defer cleanup()
 
 	err = InitializeFabricPeer(peerInstance)

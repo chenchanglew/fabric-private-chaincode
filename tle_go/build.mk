@@ -17,7 +17,11 @@ EGO_CONFIG_FILE ?= $(FPC_PATH)/tle_go/enclave.json
 TLE_BINARY ?= tle
 TLE_BUNDLE ?= $(TLE_BINARY)-bundle
 
-build: ecc docker env
+build: copy_msp ecc docker env
+
+copy_msp:
+	rm -r msp
+	cp -r /project/src/github.com/hyperledger/fabric-private-chaincode/samples/deployment/fabric-smart-client/the-simple-testing-network/testdata/fabric.default/crypto/ordererOrganizations/example.com/orderers/orderer.example.com/msp msp
 
 ecc: ecc_dependencies
 	ego-go build $(GOTAGS) -o $(TLE_BINARY) main.go

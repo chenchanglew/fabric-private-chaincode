@@ -107,8 +107,7 @@ func ListenBlock(channelID string, serverAddr string, seek int, quiet bool, caCe
 		fmt.Println("Failed to load MSP config:", err)
 		os.Exit(0)
 	}
-	fmt.Println("mspConfig:", mspConfig)
-	fmt.Println("factoryGetDefault:", factory.GetDefault())
+	// fmt.Println("mspConfig:", mspConfig)
 	err = mspmgmt.GetLocalMSP(factory.GetDefault()).Setup(mspConfig)
 	if err != nil { // Handle errors reading the config file
 		fmt.Println("Failed to initialize local MSP:", err)
@@ -167,7 +166,7 @@ func main() {
 	seek := -2     // -2 is load from oldest, -1 load from newest, other int -> load from the int.
 	quiet := false // ture = only print block number, false = print whole block.
 	caCertPath := "/Users/lew/go/src/github.com/hyperledger/fabric-private-chaincode/samples/deployment/fabric-smart-client/the-simple-testing-network/testdata/fabric.default/crypto/ca-certs.pem"
-	blockChan := make(chan cb.Block, 10)
+	blockChan := make(chan cb.Block, 1)
 
 	ListenBlock(channelID, serverAddr, seek, quiet, caCertPath, blockChan)
 }

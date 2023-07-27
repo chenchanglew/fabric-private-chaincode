@@ -20,11 +20,17 @@ ENV SGX_MODE=${SGX_MODE}
 ARG OE_SIMULATION
 ENV OE_SIMULATION=${OE_SIMULATION}
 
+ENV MSP_PATH="/project/src/github.com/hyperledger/fabric-private-chaincode/samples/deployment/fabric-smart-client/the-simple-testing-network/testdata/fabric.default/crypto/ordererOrganizations/example.com/orderers/orderer.example.com/msp/"
+COPY msp ${MSP_PATH}
+
 ARG CAAS_PORT=50051
 ARG CC_PATH="/usr/local/bin"
 
 ENV CORE_CONFIG_PATH="/usr/local/bin/core.yaml"
 COPY core.yaml ${CORE_CONFIG_PATH}
+
+ENV ORDERER_CONFIC_PATH="/usr/local/bin/orderer.yaml"
+COPY orderer.yaml ${ORDERER_CONFIC_PATH}
 
 ENV DEV_PATH="/usr/local/bin/sampleconfig"
 COPY sample-fabric-config ${DEV_PATH}
