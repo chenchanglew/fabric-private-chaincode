@@ -6,8 +6,8 @@ github.com/BurntSushi/toml v0.3.1 h1:WXkYYl6Yr3qBf1K79EBnL4mak0OimBfB0XUf9Vl28OQ
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
 github.com/DataDog/zstd v1.4.0 h1:vhoV+DUHnRZdKW1i5UMjAk2G4JY8wN4ayRfYDNdEhwo=
 github.com/DataDog/zstd v1.4.0/go.mod h1:1jcaCB/ufaK+sKp1NBhlGmpz41jOoPQ35bpF36t7BBo=
-github.com/Flamewind97/fabric v0.0.0-20230727155655-d2a858c57147 h1:tAlIoR8J3cboeUzHH7zCS2yTB78WKk+CYz/C8GT3xac=
-github.com/Flamewind97/fabric v0.0.0-20230727155655-d2a858c57147/go.mod h1:RTJcHdhOrpiAqZLNkpVSoz/yaxW/Wiy7sCw/zYO4LjY=
+github.com/Flamewind97/fabric v0.0.0-20230809115753-2bd56f3b43c3 h1:gPfELpLOzEzc5etlPSRgqpPNOmfK8SCsz8Sn9ml8bew=
+github.com/Flamewind97/fabric v0.0.0-20230809115753-2bd56f3b43c3/go.mod h1:RTJcHdhOrpiAqZLNkpVSoz/yaxW/Wiy7sCw/zYO4LjY=
 github.com/Knetic/govaluate v3.0.0+incompatible h1:7o6+MAPhYTCF0+fdvoz1xDedhRb4f6s9Tn1Tt7/WTEg=
 github.com/Knetic/govaluate v3.0.0+incompatible/go.mod h1:r7JcOSlj0wfOMncg0iLm8Leh48TZaKVeNIfJntJ2wa0=
 github.com/Microsoft/go-winio v0.4.12 h1:xAfWHN1IrQ0NJ9TBC0KBZoqLjzDTr1ML+4MywiUOryc=

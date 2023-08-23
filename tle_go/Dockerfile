@@ -44,6 +44,7 @@ COPY client ${CC_PATH}/client
 WORKDIR ${CC_PATH}
 EXPOSE ${CAAS_PORT}
 EXPOSE 50051
+EXPOSE 6060
 
 CMD ["tle"]
 # CMD ["sleep", "infinity"]

@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 
@@ -37,8 +36,6 @@ func main() {
 	}
 	blockListener := listener.NewOrdererBlockGetter(channelID, serverAddr, caCertPath)
 	// blockListener := listener.NewFileBlockGetter()
-	fmt.Scanln()
-
 	// fmt.Println("--- in TLE_go main.go start to create grpc server.---")
 
 	readConfig()

@@ -72,16 +72,15 @@ func (r *deliverClient) readUntilClose(blockChan chan cb.Block) {
 			fmt.Println("Got status ", t)
 			return
 		case *ab.DeliverResponse_Block:
-			fmt.Println("Received block: ", t.Block.Header.Number)
-			blockChan <- *t.Block
-
 			if !r.quiet {
+				fmt.Println("Received block: ", t.Block.Header.Number)
 				fmt.Scanln() // wait for Enter Key
 				err := protolator.DeepMarshalJSON(os.Stdout, t.Block)
 				if err != nil {
 					fmt.Printf("  Error pretty printing block: %s", err)
 				}
 			}
+			blockChan <- *t.Block
 		}
 	}
 }

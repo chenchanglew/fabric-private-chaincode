@@ -10,7 +10,6 @@ import (
 	"bytes"
 	"context"
 	"crypto/sha256"
-	"log"
 
 	"google.golang.org/grpc"
 
@@ -87,7 +86,7 @@ func (s *TleStubInterface) GetMeta(key string) ([]byte, error) {
 	}
 	response, err := client.GetMeta(context.Background(), request)
 	if err != nil {
-		log.Fatalf("Failed to call GetMeta: %v", err)
+		logger.Errorf("Failed to call GetMeta: %v", err)
 		return nil, err
 	}
 

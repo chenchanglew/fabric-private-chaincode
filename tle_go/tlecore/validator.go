@@ -30,7 +30,7 @@ import (
 )
 
 func VerifyBlock(channelPolicyManagerGetter policies.ChannelPolicyManagerGetter, chainID common.ChannelID, seqNum uint64, block *pcommon.Block) error {
-	fmt.Println("start verifyBlock")
+	// fmt.Println("start verifyBlock")
 	if block.Header == nil {
 		return fmt.Errorf("Invalid Block on channel [%s]. Header must be different from nil.", chainID)
 	}
@@ -77,7 +77,9 @@ func VerifyBlock(channelPolicyManagerGetter policies.ChannelPolicyManagerGetter,
 	// Get block validation policy
 	policy, ok := cpm.GetPolicy(policies.BlockValidation)
 	// ok is true if it was the policy requested, or false if it is the default policy
-	fmt.Printf("Got block validation policy for channel [%s] with flag [%t], policy [%s]\n", channelID, ok, policy)
+	if !ok {
+		fmt.Printf("Got block validation policy for channel [%s] with flag [%t], policy [%s]\n", channelID, ok, policy)
+	}
 
 	// - Prepare SignedData
 	signatureSet := []*protoutil.SignedData{}
@@ -97,7 +99,7 @@ func VerifyBlock(channelPolicyManagerGetter policies.ChannelPolicyManagerGetter,
 	}
 
 	// - Evaluate policy
-	fmt.Println("Start evaluateSignedData")
+	// fmt.Println("Start evaluateSignedData")
 	// if len(signatureSet) > 0 {
 	// 	fmt.Printf("signatureSet[0].Identity = [%x]\n", signatureSet[0].Identity)
 	// 	fmt.Printf("signatureSet[0].Data = [%x]\n", signatureSet[0].Data)

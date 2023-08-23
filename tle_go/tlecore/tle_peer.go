@@ -4,6 +4,7 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"fmt"
+	"time"
 
 	"github.com/hyperledger/fabric-protos-go/common"
 	"github.com/hyperledger/fabric/common/policies"
@@ -72,9 +73,9 @@ func (p *TlePeer) UpdateState(block *common.Block) error {
 	for tIdx := range block.Data.Data {
 		// TODO: continue if current txn is invalid.
 		txsfltr := ValidationFlags(block.Metadata.Metadata[common.BlockMetadataIndex_TRANSACTIONS_FILTER])
-		fmt.Printf("blockNum %d, tIdx: %d, validationCode: %v\n", tIdx, block.Header.Number, txsfltr.Flag(tIdx))
+		// fmt.Printf("blockNum %d, tIdx: %d, validationCode: %v\n", block.Header.Number, tIdx, txsfltr.Flag(tIdx))
 		if txsfltr.IsInvalid(tIdx) {
-			fmt.Println("The current txn is not valid!")
+			fmt.Printf("blockNum %d, tIdx: %d, validationCode: %v, current txn is not valid!\n", block.Header.Number, tIdx, txsfltr.Flag(tIdx))
 			continue
 		}
 
@@ -91,7 +92,7 @@ func (p *TlePeer) UpdateState(block *common.Block) error {
 		}
 
 		for _, nsRWSet := range rwset.NsRwSets {
-			fmt.Printf("namespace: %v, read: %v, writes: %v\n", nsRWSet.NameSpace, nsRWSet.KvRwSet.Reads, nsRWSet.KvRwSet.Writes)
+			// fmt.Printf("namespace: %v, read: %v, writes: %v\n", nsRWSet.NameSpace, nsRWSet.KvRwSet.Reads, nsRWSet.KvRwSet.Writes)
 
 			// Q: can we use Metadata?
 			// metadataWriteSet := nsRwset.KvRwSet.MetadataWrites
@@ -99,7 +100,7 @@ func (p *TlePeer) UpdateState(block *common.Block) error {
 			for _, kvWrite := range nsRWSet.KvRwSet.Writes {
 				metaData := sha256.Sum256(kvWrite.Value)
 
-				fmt.Printf("Saving namespace: %v, key: %v, metadata: %x\n", nsRWSet.NameSpace, kvWrite.Key, metaData)
+				// fmt.Printf("Saving namespace: %v, key: %v, metadata: %x\n", nsRWSet.NameSpace, kvWrite.Key, metaData)
 
 				// Update tleState using PutMeta
 				err := p.tleState.PutMeta(nsRWSet.NameSpace, kvWrite.Key, metaData[:])
@@ -112,7 +113,10 @@ func (p *TlePeer) UpdateState(block *common.Block) error {
 	return nil
 }
 
+var totalVerifyTime time.Duration
+
 func (p *TlePeer) ProcessBlock(block *common.Block, blockNum int) error {
+	tStart := time.Now()
 	err := VerifyBlock(p.policyMgr, []byte(p.channelName), uint64(blockNum), block)
 	if err != nil {
 		return err
@@ -127,6 +131,8 @@ func (p *TlePeer) ProcessBlock(block *common.Block, blockNum int) error {
 	if err != nil {
 		return err
 	}
+	totalVerifyTime += time.Since(tStart)
+	fmt.Println("total verify time:", totalVerifyTime)
 
 	// update state
 	return p.UpdateState(block)
@@ -162,6 +168,7 @@ func (p *TlePeer) InitFabricPart(genesisBlock *common.Block) func() {
 }
 
 func (p *TlePeer) Start() {
+	totalVerifyTime = 0 * time.Second
 	genesisBlock, err := p.blockListener.GetNextBlock()
 	sDec, _ := base64.StdEncoding.DecodeString("AA==")
 	genesisBlock.Metadata.Metadata[2] = sDec
