@@ -25,6 +25,20 @@ func Setup(t *testing.T) (SecretKeeper, *fakes.ChaincodeStub, *fakes.Transaction
 	return secretKeeper, chaincodeStub, transactionContext, adminSetByte, authSetByte, secretByte
 }
 
+func TestInit(t *testing.T) {
+	_, _, _, _, authSetByte, secretByte := Setup(t)
+
+	var recvAuth AuthSet
+	err := json.Unmarshal(authSetByte, &recvAuth)
+	require.NoError(t, err)
+	require.Equal(t, recvAuth.ExportToString(), "Alice|Bob")
+
+	var recvSecretValue Secret
+	err = json.Unmarshal(secretByte, &recvSecretValue)
+	require.NoError(t, err)
+	require.Equal(t, recvSecretValue.Value, "DefaultSecret")
+}
+
 func TestWrongSignature(t *testing.T) {
 	secretKeeper, chaincodeStub, transactionContext, adminSetByte, _, _ := Setup(t)
 
