@@ -25,7 +25,9 @@ func main() {
 	addr := os.Getenv("CHAINCODE_SERVER_ADDRESS")
 
 	// create private chaincode
-	privateChaincode := fpc.NewPrivateChaincode(chaincode.NewKvTest())
+	// privateChaincode := fpc.NewPrivateChaincode(chaincode.NewKvTest())
+	// privateChaincode := fpc.NewTleChaincode(chaincode.NewKvTest())
+	privateChaincode := fpc.NewMerkleChaincode(chaincode.NewKvTest())
 
 	// start chaincode as a service
 	server := &shim.ChaincodeServer{
