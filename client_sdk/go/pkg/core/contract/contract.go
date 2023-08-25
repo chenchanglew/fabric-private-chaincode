@@ -10,6 +10,7 @@ package contract
 
 import (
 	"strings"
+	"time"
 
 	"github.com/hyperledger/fabric-private-chaincode/internal/crypto"
 	"github.com/hyperledger/fabric-private-chaincode/internal/utils"
@@ -115,6 +116,9 @@ func (c *contractImpl) SubmitTransaction(name string, args ...string) ([]byte, e
 	if err != nil {
 		return nil, err
 	}
+
+	ArtificialLatency := 15 * (7 * time.Millisecond / 2) // default delay 3.5 RTT
+	time.Sleep(ArtificialLatency)
 
 	logger.Debugf("calling __endorse!")
 	_, err = c.target.SubmitTransaction("__endorse", string(encryptedResponse))
