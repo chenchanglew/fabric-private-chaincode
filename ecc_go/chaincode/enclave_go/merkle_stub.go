@@ -107,8 +107,9 @@ func (s *MerkleStubInterface) GetState(key string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	if len(byteMerkleValue) == 0 {
-		return nil, errors.New("Merkle Solution, KVS key not found")
+	if byteMerkleValue == nil {
+		logger.Debugf("Merkle Solution, KVS key: %v not found", key)
+		return nil, nil
 	}
 	if s.merkleRoot == nil {
 		return nil, errors.New("Merkle Solution, Merkle Root not yet decided.")
