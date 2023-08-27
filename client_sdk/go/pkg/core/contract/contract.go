@@ -10,6 +10,7 @@ package contract
 
 import (
 	"strings"
+	"time"
 
 	"github.com/hyperledger/fabric-private-chaincode/internal/crypto"
 	"github.com/hyperledger/fabric-private-chaincode/internal/utils"
@@ -36,12 +37,13 @@ type Provider interface {
 }
 
 // GetContract is the factory method for creating FPC Contract objects.
-//  Parameters:
-//  network is an initialized Fabric network object
-//  chaincodeID is the ID of the target chaincode
 //
-//  Returns:
-//  The contractImpl object
+//	Parameters:
+//	network is an initialized Fabric network object
+//	chaincodeID is the ID of the target chaincode
+//
+//	Returns:
+//	The contractImpl object
 func GetContract(p Provider, chaincodeID string) *contractImpl {
 	ercc := p.GetContract("ercc")
 	return New(p.GetContract(chaincodeID), ercc, nil, &crypto.EncryptionProviderImpl{
@@ -79,6 +81,11 @@ func (c *contractImpl) EvaluateTransaction(name string, args ...string) ([]byte,
 		return nil, err
 	}
 
+	err = AddMerkleRootToArgs(&args, c.target.Name())
+	if err != nil {
+		return nil, err
+	}
+
 	encryptedRequest, err := ctx.Conceal(name, args)
 	if err != nil {
 		return nil, err
@@ -105,6 +112,11 @@ func (c *contractImpl) SubmitTransaction(name string, args ...string) ([]byte, e
 		return nil, err
 	}
 
+	err = AddMerkleRootToArgs(&args, c.target.Name())
+	if err != nil {
+		return nil, err
+	}
+
 	encryptedRequest, err := ctx.Conceal(name, args)
 	if err != nil {
 		return nil, err
@@ -115,6 +127,9 @@ func (c *contractImpl) SubmitTransaction(name string, args ...string) ([]byte, e
 	if err != nil {
 		return nil, err
 	}
+
+	ArtificialLatency := 15 * (7 * time.Millisecond / 2) // default delay 3.5 RTT
+	time.Sleep(ArtificialLatency)
 
 	logger.Debugf("calling __endorse!")
 	_, err = c.target.SubmitTransaction("__endorse", string(encryptedResponse))

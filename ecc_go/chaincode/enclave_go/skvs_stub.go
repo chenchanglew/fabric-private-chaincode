@@ -10,6 +10,7 @@ import (
 	"encoding/json"
 
 	"github.com/hyperledger/fabric-chaincode-go/shim"
+	"github.com/hyperledger/fabric-private-chaincode/internal/protos"
 	pb "github.com/hyperledger/fabric-protos-go/peer"
 )
 
@@ -20,9 +21,9 @@ type SkvsStubInterface struct {
 	key        string
 }
 
-func NewSkvsStubInterface(stub shim.ChaincodeStubInterface, input *pb.ChaincodeInput, rwset *readWriteSet, sep StateEncryptionFunctions) shim.ChaincodeStubInterface {
+func NewSkvsStubInterface(stub shim.ChaincodeStubInterface, chaincodeRequest *protos.CleartextChaincodeRequest, rwset *readWriteSet, sep StateEncryptionFunctions) shim.ChaincodeStubInterface {
 	logger.Debugf("===== Creating New Skvs Interface =====")
-	fpcStub := NewFpcStubInterface(stub, input, rwset, sep)
+	fpcStub := NewFpcStubInterface(stub, chaincodeRequest, rwset, sep)
 	skvsStub := SkvsStubInterface{fpcStub.(*FpcStubInterface), map[string][]byte{}, map[string][]byte{}, "SKVS"}
 	err := skvsStub.InitSKVS()
 	if err != nil {

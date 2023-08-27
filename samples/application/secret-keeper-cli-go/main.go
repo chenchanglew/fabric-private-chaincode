@@ -8,8 +8,12 @@ SPDX-License-Identifier: Apache-2.0
 package main
 
 import (
+	"encoding/csv"
 	"fmt"
+	"log"
 	"os"
+	"path/filepath"
+	"runtime"
 	"strconv"
 	"time"
 
@@ -54,24 +58,108 @@ func initConfig() *pkg.Config {
 	return config
 }
 
-func main() {
+func clientSend(client *pkg.Client, sendNum int, keyPrefix string, finish chan string, data chan []string, latency chan time.Duration) {
+	numOpRep := 2
+	numKey := sendNum / numOpRep
 
-	config := initConfig()
+	latencyArr := make([]string, sendNum)
+	totalDuration := 0 * time.Second
+	for i := 0; i < sendNum; i++ {
+		keyIndex := i
+		if keyIndex >= numKey {
+			keyIndex -= numKey
+		}
+		key := keyPrefix + "_" + strconv.Itoa(keyIndex) + "RequiredLongPostfixHereToMatchRequirement"
+		start := time.Now()
+		if (i/numKey)%(2) == 0 {
+			// put state: value = key
+			_ = client.Invoke("put_state", key, key+"_"+strconv.Itoa(i))
+			// fmt.Println("> " + res)
+		} else {
+			// get state: expect value = key
+			_ = client.Invoke("get_state", key)
+			// fmt.Println("> " + res)
+		}
+		runDuration := time.Since(start)
+		latencyArr[i] = fmt.Sprintf("%d", runDuration.Milliseconds())
+		totalDuration += runDuration
+	}
+	avgLatency := totalDuration / time.Duration(sendNum)
 
-	client := pkg.NewClient(config)
-	// res := client.Invoke("initSecretKeeper")
-	// fmt.Println("> " + res)
+	finish <- keyPrefix
+	latency <- avgLatency
+	data <- latencyArr
+}
 
-	res := client.Query("revealSecret", "Alice")
-	fmt.Println("> " + res)
+func runExperiment(config *pkg.Config, clientNum int, numReqEach int, filename string) {
+	clientSet := make([]*pkg.Client, clientNum)
 
-	res = client.Invoke("LockSecret", "Bob", "NewSecret2")
-	fmt.Println("> " + res)
+	for i := 0; i < clientNum; i++ {
+		clientSet[i] = pkg.NewClient(config)
+	}
+	fmt.Println("clientset:", clientSet)
+
+	finishChan := make(chan string, 1)
+	dataChan := make(chan []string, 1)
+	latencyChan := make(chan time.Duration, 1)
 
 	start := time.Now()
-	for i := 0; i < 10; i++ {
-		res = client.Invoke("revealSecret", "Alice")
-		fmt.Println("> " + res)
+	for i := 0; i < clientNum; i++ {
+		keyPrefix := "c" + strconv.Itoa(i)
+		go clientSend(clientSet[i], numReqEach, keyPrefix, finishChan, dataChan, latencyChan)
 	}
-	fmt.Println(time.Since(start))
+
+	collect := 0
+	for collect < clientNum {
+		select {
+		case <-finishChan:
+			collect += 1
+		case <-time.After(30 * time.Second):
+			fmt.Println("Still waiting for completion, has run:", time.Since(start))
+		}
+	}
+	totalDuration := time.Since(start)
+	fmt.Println("Finish", clientNum*numReqEach, "of requests, duration:", totalDuration)
+
+	collect = 0
+	totalLatency := 0 * time.Millisecond
+	for collect < clientNum {
+		latency := <-latencyChan
+		totalLatency += latency
+		collect += 1
+	}
+	fmt.Printf("Throughput(Txn/s): %4f, Avglatency(ms/req): %v\n", float32(clientNum*numReqEach*1000)/float32(totalDuration.Milliseconds()), totalLatency/time.Duration(clientNum))
+
+	file, err := os.Create(filename)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer file.Close()
+
+	writer := csv.NewWriter(file)
+	defer writer.Flush()
+
+	collect = 0
+	for collect < clientNum {
+		clientData := <-dataChan
+		writer.Write(clientData)
+		collect += 1
+	}
+
+}
+
+func main() {
+	config := initConfig()
+	solution := "SKVS"
+	repeatTime := 3
+	clientNum := 2
+	numReqEach := 700
+	for i := 0; i < repeatTime; i++ {
+		filename := fmt.Sprintf("%s_latency_%d_%d_%d.csv", solution, clientNum, numReqEach, i)
+		filepath := filepath.Join("/Users/lew/Desktop/fpc-notes/misc/latencyExp/", filename)
+		runExperiment(config, clientNum, numReqEach, filepath)
+		time.Sleep(3 * time.Second)
+		runtime.GC()
+		time.Sleep(3 * time.Second)
+	}
 }

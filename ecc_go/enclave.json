@@ -19,6 +19,10 @@
     {
         "name": "FABRIC_LOGGING_SPEC",
         "fromHost": true
+    },
+    {
+        "name": "FPC_MERKLE_SOLUTION",
+        "fromHost": true
     }
 ]
 }
