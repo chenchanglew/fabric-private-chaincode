@@ -1,0 +1,82 @@
+{
+ "exe": "tle",
+ "key": "private.pem",
+ "debug": true,
+ "heapSize": 1024,
+ "productID": 1,
+ "securityVersion": 1,
+ "mounts": [
+    {
+        "source": "/project/",
+        "target": "/project/",
+        "type": "hostfs"
+    },
+    {
+        "source": "/usr/local/bin",
+        "target": "/usr/local/bin",
+        "type": "hostfs"
+    },
+    {
+        "target": "/tmp",
+        "type": "memfs"
+    },
+    {
+        "source": "/project/src/github.com/hyperledger/fabric-private-chaincode/samples/deployment/fabric-smart-client/the-simple-testing-network/testdata/fabric.default/crypto/ordererOrganizations/example.com/orderers/orderer.example.com/msp",
+        "target": "/project/src/github.com/hyperledger/fabric-private-chaincode/samples/deployment/fabric-smart-client/the-simple-testing-network/testdata/fabric.default/crypto/ordererOrganizations/example.com/orderers/orderer.example.com/msp",
+        "type": "hostfs"
+    },
+    {
+        "source": "/project/src/github.com/hyperledger/fabric-private-chaincode/samples/deployment/fabric-smart-client/the-simple-testing-network/testdata/fabric.default/crypto/ordererOrganizations/example.com/orderers/orderer.example.com/msp/signcerts",
+        "target": "/project/src/github.com/hyperledger/fabric-private-chaincode/samples/deployment/fabric-smart-client/the-simple-testing-network/testdata/fabric.default/crypto/ordererOrganizations/example.com/orderers/orderer.example.com/msp/signcerts",
+        "type": "hostfs"
+    }
+ ],
+ "files": [
+    {
+        "source": "/project/src/github.com/hyperledger/fabric-private-chaincode/samples/deployment/fabric-smart-client/the-simple-testing-network/testdata/fabric.default/peers/Org1.Org1_peer_0/core.yaml",
+        "target": "/project/src/github.com/hyperledger/fabric-private-chaincode/samples/deployment/fabric-smart-client/the-simple-testing-network/testdata/fabric.default/peers/Org1.Org1_peer_0/core.yaml"
+    },
+    {
+        "source": "/project/src/github.com/hyperledger/fabric-private-chaincode/tle_go/orderer.yaml",
+        "target": "orderer.yaml"
+    },
+    {
+        "source": "/project/src/github.com/hyperledger/fabric-private-chaincode/samples/deployment/fabric-smart-client/the-simple-testing-network/testdata/fabric.default/crypto/ca-certs.pem",
+        "target": "/project/src/github.com/hyperledger/fabric-private-chaincode/samples/deployment/fabric-smart-client/the-simple-testing-network/testdata/fabric.default/crypto/ca-certs.pem"
+    },
+    {
+        "source": "/project/src/github.com/hyperledger/fabric-private-chaincode/samples/deployment/fabric-smart-client/the-simple-testing-network/testdata/fabric.default/crypto/ordererOrganizations/example.com/orderers/orderer.example.com/msp/signcerts/orderer.example.com-cert.pem",
+        "target": "/project/src/github.com/hyperledger/fabric-private-chaincode/samples/deployment/fabric-smart-client/the-simple-testing-network/testdata/fabric.default/crypto/ordererOrganizations/example.com/orderers/orderer.example.com/msp/signcerts/orderer.example.com-cert.pem"
+    },
+    {
+        "source": "/project/src/github.com/hyperledger/fabric-private-chaincode/samples/deployment/fabric-smart-client/the-simple-testing-network/testdata/fabric.default/crypto/ordererOrganizations/example.com/orderers/orderer.example.com/msp/cacerts/ca.example.com-cert.pem",
+        "target": "/project/src/github.com/hyperledger/fabric-private-chaincode/samples/deployment/fabric-smart-client/the-simple-testing-network/testdata/fabric.default/crypto/ordererOrganizations/example.com/orderers/orderer.example.com/msp/cacerts/ca.example.com-cert.pem"
+    }
+ ],
+ "env": [
+    {
+        "name": "CHAINCODE_SERVER_ADDRESS",
+        "fromHost": true
+    },
+    {
+        "name": "CHAINCODE_PKG_ID",
+        "fromHost": true
+    },
+    {
+        "name": "FABRIC_LOGGING_SPEC",
+        "fromHost": true
+    },
+    {
+        "name": "CORE_CONFIG_PATH",
+        "fromHost": true
+    },
+    {
+        "name": "DEV_PATH",
+        "fromHost": true
+    },
+    {
+        "name": "BLOCK_PATH",
+        "fromHost": true
+    }
+]
+}

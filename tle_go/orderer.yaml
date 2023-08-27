@@ -1,0 +1,73 @@
+---
+General:
+  ListenAddress: 0.0.0.0
+  ListenPort: 20000
+  TLS:
+    Enabled: true
+    PrivateKey: /Users/lew/go/src/github.com/hyperledger/fabric-private-chaincode/samples/deployment/fabric-smart-client/the-simple-testing-network/testdata/fabric.default/crypto/ordererOrganizations/example.com/orderers/orderer.example.com/tls/server.key
+    Certificate: /Users/lew/go/src/github.com/hyperledger/fabric-private-chaincode/samples/deployment/fabric-smart-client/the-simple-testing-network/testdata/fabric.default/crypto/ordererOrganizations/example.com/orderers/orderer.example.com/tls/server.crt
+    RootCAs:
+    -  /Users/lew/go/src/github.com/hyperledger/fabric-private-chaincode/samples/deployment/fabric-smart-client/the-simple-testing-network/testdata/fabric.default/crypto/ordererOrganizations/example.com/orderers/orderer.example.com/tls/ca.crt
+    ClientAuthRequired: false
+    ClientRootCAs:
+  Cluster:
+    ClientCertificate: /Users/lew/go/src/github.com/hyperledger/fabric-private-chaincode/samples/deployment/fabric-smart-client/the-simple-testing-network/testdata/fabric.default/crypto/ordererOrganizations/example.com/orderers/orderer.example.com/tls/server.crt
+    ClientPrivateKey: /Users/lew/go/src/github.com/hyperledger/fabric-private-chaincode/samples/deployment/fabric-smart-client/the-simple-testing-network/testdata/fabric.default/crypto/ordererOrganizations/example.com/orderers/orderer.example.com/tls/server.key
+    ServerCertificate: /Users/lew/go/src/github.com/hyperledger/fabric-private-chaincode/samples/deployment/fabric-smart-client/the-simple-testing-network/testdata/fabric.default/crypto/ordererOrganizations/example.com/orderers/orderer.example.com/tls/server.crt
+    ServerPrivateKey: /Users/lew/go/src/github.com/hyperledger/fabric-private-chaincode/samples/deployment/fabric-smart-client/the-simple-testing-network/testdata/fabric.default/crypto/ordererOrganizations/example.com/orderers/orderer.example.com/tls/server.key
+    DialTimeout: 5s
+    RPCTimeout: 7s
+    ReplicationBufferSize: 20971520
+    ReplicationPullTimeout: 5s
+    ReplicationRetryTimeout: 5s
+    ListenAddress: 127.0.0.1
+    ListenPort: 20003
+  Keepalive:
+    ServerMinInterval: 60s
+    ServerInterval: 7200s
+    ServerTimeout: 20s
+  BootstrapMethod: file
+  BootstrapFile: /Users/lew/go/src/github.com/hyperledger/fabric-private-chaincode/samples/deployment/fabric-smart-client/the-simple-testing-network/testdata/fabric.default/systemchannel_block.pb
+  LocalMSPDir: /project/src/github.com/hyperledger/fabric-private-chaincode/samples/deployment/fabric-smart-client/the-simple-testing-network/testdata/fabric.default/crypto/ordererOrganizations/example.com/orderers/orderer.example.com/msp
+  LocalMSPID: OrdererMSP
+  Profile:
+    Enabled: false
+    Address: 127.0.0.1:20001
+  BCCSP:
+    Default: SW
+    SW:
+      Hash: SHA2
+      Security: 256
+      FileKeyStore:
+        KeyStore:
+  Authentication:
+    TimeWindow: 15m
+FileLedger:
+  Location: /Users/lew/go/src/github.com/hyperledger/fabric-private-chaincode/samples/deployment/fabric-smart-client/the-simple-testing-network/testdata/fabric.default/orderers/OrdererOrg.orderer/system
+  Prefix: hyperledger-fabric-ordererledger
+
+Debug:
+  BroadcastTraceDir:
+  DeliverTraceDir:
+Consensus:
+  WALDir: /Users/lew/go/src/github.com/hyperledger/fabric-private-chaincode/samples/deployment/fabric-smart-client/the-simple-testing-network/testdata/fabric.default/orderers/OrdererOrg.orderer/etcdraft/wal
+  SnapDir: /Users/lew/go/src/github.com/hyperledger/fabric-private-chaincode/samples/deployment/fabric-smart-client/the-simple-testing-network/testdata/fabric.default/orderers/OrdererOrg.orderer/etcdraft/snapshot
+  EvictionSuspicion: 10s
+Operations:
+  ListenAddress: 0.0.0.0:20002
+  TLS:
+    Enabled: false
+    PrivateKey: /Users/lew/go/src/github.com/hyperledger/fabric-private-chaincode/samples/deployment/fabric-smart-client/the-simple-testing-network/testdata/fabric.default/crypto/ordererOrganizations/example.com/orderers/orderer.example.com/tls/server.key
+    Certificate: /Users/lew/go/src/github.com/hyperledger/fabric-private-chaincode/samples/deployment/fabric-smart-client/the-simple-testing-network/testdata/fabric.default/crypto/ordererOrganizations/example.com/orderers/orderer.example.com/tls/server.crt
+    RootCAs:
+    -  /Users/lew/go/src/github.com/hyperledger/fabric-private-chaincode/samples/deployment/fabric-smart-client/the-simple-testing-network/testdata/fabric.default/crypto/ordererOrganizations/example.com/orderers/orderer.example.com/tls/ca.crt
+    ClientAuthRequired: false
+    ClientRootCAs:
+    -  /Users/lew/go/src/github.com/hyperledger/fabric-private-chaincode/samples/deployment/fabric-smart-client/the-simple-testing-network/testdata/fabric.default/crypto/ordererOrganizations/example.com/orderers/orderer.example.com/tls/ca.crt
+Metrics:
+  Provider: prometheus
+  Statsd:
+    Network: udp
+    Address: 127.0.0.1:8125
+    WriteInterval: 5s
+    Prefix: ordererorg_orderer

@@ -1,0 +1,228 @@
+---
+logging:
+  spec: fpc=debug:endorser,grpc,comm.grpc,gossip=error:info 
+  format: '%{color}%{time:2006-01-02 15:04:05.000 MST} [%{module}] %{shortfunc} -> %{level:.4s} %{id:03x}%{color:reset} %{message}'
+
+peer:
+  id: Org1.Org1_peer_0
+  networkId: qfgthbp5evhunfg4kvekloal4u
+  address: 127.0.0.1:20004
+  addressAutoDetect: true
+  listenAddress: 0.0.0.0:20004
+  chaincodeListenAddress: 0.0.0.0:20005
+  keepalive:
+    minInterval: 60s
+    interval: 300s
+    timeout: 600s
+    client:
+      interval: 60s
+      timeout: 600s
+    deliveryClient:
+      interval: 60s
+      timeout: 20s
+  gossip:
+    bootstrap: 127.0.0.1:20004
+    endpoint: 127.0.0.1:20004
+    externalEndpoint: 127.0.0.1:20004
+    useLeaderElection: true
+    orgLeader: false
+    membershipTrackerInterval: 5s
+    maxBlockCountToStore: 100
+    maxPropagationBurstLatency: 10ms
+    maxPropagationBurstSize: 10
+    propagateIterations: 1
+    propagatePeerNum: 3
+    pullInterval: 4s
+    pullPeerNum: 3
+    requestStateInfoInterval: 4s
+    publishStateInfoInterval: 4s
+    stateInfoRetentionInterval:
+    publishCertPeriod: 10s
+    dialTimeout: 3s
+    connTimeout: 2s
+    recvBuffSize: 20
+    sendBuffSize: 200
+    digestWaitTime: 1s
+    requestWaitTime: 1500ms
+    responseWaitTime: 2s
+    aliveTimeInterval: 5s
+    aliveExpirationTimeout: 25s
+    reconnectInterval: 25s
+    election:
+      startupGracePeriod: 15s
+      membershipSampleInterval: 1s
+      leaderAliveThreshold: 10s
+      leaderElectionDuration: 5s
+    pvtData:
+      pullRetryThreshold: 7s
+      transientstoreMaxBlockRetention: 1000
+      pushAckTimeout: 3s
+      btlPullMargin: 10
+      reconcileBatchSize: 10
+      reconcileSleepInterval: 10s
+      reconciliationEnabled: true
+      skipPullingInvalidTransactionsDuringCommit: false
+    state:
+       enabled: true
+       checkInterval: 10s
+       responseTimeout: 3s
+       batchSize: 10
+       blockBufferSize: 100
+       maxRetries: 3
+  events:
+    address: 127.0.0.1:20006
+    buffersize: 100
+    timeout: 10ms
+    timewindow: 15m
+    keepalive:
+      minInterval: 60s
+  tls:
+    enabled:  true
+    clientAuthRequired: false
+    cert:
+      file: /Users/lew/go/src/github.com/hyperledger/fabric-private-chaincode/samples/deployment/fabric-smart-client/the-simple-testing-network/testdata/fabric.default/crypto/peerOrganizations/org1.example.com/peers/Org1_peer_0.org1.example.com/tls/server.crt
+    key:
+      file: /Users/lew/go/src/github.com/hyperledger/fabric-private-chaincode/samples/deployment/fabric-smart-client/the-simple-testing-network/testdata/fabric.default/crypto/peerOrganizations/org1.example.com/peers/Org1_peer_0.org1.example.com/tls/server.key
+    clientCert:
+      file: /Users/lew/go/src/github.com/hyperledger/fabric-private-chaincode/samples/deployment/fabric-smart-client/the-simple-testing-network/testdata/fabric.default/crypto/peerOrganizations/org1.example.com/peers/Org1_peer_0.org1.example.com/tls/server.crt
+    clientKey:
+      file: /Users/lew/go/src/github.com/hyperledger/fabric-private-chaincode/samples/deployment/fabric-smart-client/the-simple-testing-network/testdata/fabric.default/crypto/peerOrganizations/org1.example.com/peers/Org1_peer_0.org1.example.com/tls/server.key
+    rootcert:
+      file: /Users/lew/go/src/github.com/hyperledger/fabric-private-chaincode/samples/deployment/fabric-smart-client/the-simple-testing-network/testdata/fabric.default/crypto/peerOrganizations/org1.example.com/peers/Org1_peer_0.org1.example.com/tls/ca.crt
+    clientRootCAs:
+      files:
+      - /Users/lew/go/src/github.com/hyperledger/fabric-private-chaincode/samples/deployment/fabric-smart-client/the-simple-testing-network/testdata/fabric.default/crypto/peerOrganizations/org1.example.com/peers/Org1_peer_0.org1.example.com/tls/ca.crt
+  authentication:
+    timewindow: 15m
+  fileSystemPath: filesystem
+  BCCSP:
+    Default: SW
+    SW:
+      Hash: SHA2
+      Security: 256
+      FileKeyStore:
+        KeyStore:
+  mspConfigPath: /Users/lew/go/src/github.com/hyperledger/fabric-private-chaincode/samples/deployment/fabric-smart-client/the-simple-testing-network/testdata/fabric.default/crypto/peerOrganizations/org1.example.com/peers/Org1_peer_0.org1.example.com/msp
+  localMspId: Org1MSP
+  deliveryclient:
+    reconnectTotalTimeThreshold: 3600s
+  localMspType: bccsp
+  profile:
+    enabled:     false
+    listenAddress: 127.0.0.1:0
+  handlers:
+    authFilters:
+    - name: DefaultAuth
+    - name: ExpirationCheck
+    decorators:
+    - name: DefaultDecorator
+    endorsers:
+      escc:
+        name: DefaultEndorsement
+    validators:
+      vscc:
+        name: DefaultValidation
+      
+      
+      
+  validatorPoolSize:
+  discovery:
+    enabled: true
+    authCacheEnabled: true
+    authCacheMaxSize: 1000
+    authCachePurgeRetentionRatio: 0.75
+    orgMembersAllowedAccess: false
+  limits:
+    concurrency:
+      qscc: 500
+
+vm:
+  endpoint: unix:///var/run/docker.sock
+  docker:
+    tls:
+      enabled: false
+      ca:
+        file: docker/ca.crt
+      cert:
+        file: docker/tls.crt
+      key:
+        file: docker/tls.key
+    attachStdout: true
+    hostConfig:
+      NetworkMode: host
+      LogConfig:
+        Type: json-file
+        Config:
+          max-size: "50m"
+          max-file: "5"
+      Memory: 2147483648
+
+chaincode:
+  builder: $(DOCKER_NS)/fabric-ccenv:$(PROJECT_VERSION)
+  pull: false
+  golang:
+    runtime: $(DOCKER_NS)/fabric-baseos:$(PROJECT_VERSION)
+    dynamicLink: false
+  car:
+    runtime: $(DOCKER_NS)/fabric-baseos:$(PROJECT_VERSION)
+  java:
+    runtime: $(DOCKER_NS)/fabric-javaenv:latest
+  node:
+    runtime: $(DOCKER_NS)/fabric-nodeenv:latest
+  installTimeout: 1200s
+  startuptimeout: 1200s
+  executetimeout: 1200s
+  mode: net
+  keepalive: 0
+  system:
+    _lifecycle: enable
+    cscc:       enable
+    lscc:       enable
+    qscc:       enable
+  logging:
+    level:  debug
+    shim:   debug
+    format: '%{color}%{time:2006-01-02 15:04:05.000 MST} [%{module}] %{shortfunc} -> %{level:.4s} %{id:03x}%{color:reset} %{message}'
+  externalBuilders: 
+    - path: /Users/lew/go/src/github.com/hyperledger/fabric-private-chaincode/samples/deployment/fabric-smart-client/the-simple-testing-network/testdata/fabric.default/fpc/externalbuilders/chaincode_server
+      name: fpc-external-launcher
+      propagateEnvironment: 
+         - CORE_PEER_ID
+         - FABRIC_LOGGING_SPEC
+
+ledger:
+  blockchain:
+  state:
+    stateDatabase: goleveldb
+    couchDBConfig:
+      couchDBAddress: 127.0.0.1:5984
+      username:
+      password:
+      maxRetries: 3
+      maxRetriesOnStartup: 10
+      requestTimeout: 35s
+      queryLimit: 10000
+      maxBatchUpdateSize: 1000
+      warmIndexesAfterNBlocks: 1
+  history:
+    enableHistoryDatabase: true
+
+operations:
+  listenAddress: 0.0.0.0:20008
+  tls:
+    enabled: false
+    cert:
+      file: /Users/lew/go/src/github.com/hyperledger/fabric-private-chaincode/samples/deployment/fabric-smart-client/the-simple-testing-network/testdata/fabric.default/crypto/peerOrganizations/org1.example.com/peers/Org1_peer_0.org1.example.com/tls/server.crt
+    key:
+      file: /Users/lew/go/src/github.com/hyperledger/fabric-private-chaincode/samples/deployment/fabric-smart-client/the-simple-testing-network/testdata/fabric.default/crypto/peerOrganizations/org1.example.com/peers/Org1_peer_0.org1.example.com/tls/server.key
+    clientAuthRequired: false
+    clientRootCAs:
+      files:
+      - /Users/lew/go/src/github.com/hyperledger/fabric-private-chaincode/samples/deployment/fabric-smart-client/the-simple-testing-network/testdata/fabric.default/crypto/peerOrganizations/org1.example.com/peers/Org1_peer_0.org1.example.com/tls/ca.crt
+metrics:
+  provider: prometheus
+  statsd:
+    network: udp
+    address: 127.0.0.1:8125
+    writeInterval: 5s
+    prefix: org1_org1_peer_0

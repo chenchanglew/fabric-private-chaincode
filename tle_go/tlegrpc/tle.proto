@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+option go_package = "github.com/hyperledger/fabric-private-chaincode/tle_go/tlegrpc";
+
+message MetaRequest {
+  string namespace = 1;
+  string key = 2;
+}
+
+message MetaResponse {
+  bytes data = 1;
+  bytes lastCommitHash = 2;
+}
+
+message Empty {
+}
+
+service TleService {
+  rpc getMeta(MetaRequest) returns (MetaResponse) {}
+  rpc getSession(Empty) returns (MetaResponse) {}
+}

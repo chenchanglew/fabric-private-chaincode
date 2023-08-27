@@ -139,6 +139,15 @@ run-dev: dev
 	# Now run a new instance
 	$(DOCKER) run $(DOCKER_DEV_RUN_OPTS) --name ${DOCKER_DEV_CONTAINER_NAME} -t $(FPC_DOCKER_DEV_NAME):${FPC_VERSION} ${DOCKER_DEV_OPTIONAL_CMD}
 
+run-dev-tle: dev
+	# Cleanup existing but non-running (note absence of --force in rm!) old dev containers
+	dev_container_id=$$(docker ps -a | grep ${DOCKER_DEV_CONTAINER_NAME} | awk '{ print $$1 }'); \
+	   [ -z  "$${dev_container_id}" ] || ${DOCKER} rm "$${dev_container_id}"
+	# Now run a new instance
+	$(eval DOCKER_FABRIC_PATH=$(DOCKER_GOPATH)/src/github.com/hyperledger/fabric)
+	$(eval DOCKER_DEV_RUN_OPTS += -v "$(abspath ${TOP}/../fabric)":$(DOCKER_FABRIC_PATH))
+	$(DOCKER) run $(DOCKER_DEV_RUN_OPTS) --name ${DOCKER_DEV_CONTAINER_NAME} -t $(FPC_DOCKER_DEV_NAME):${FPC_VERSION} ${DOCKER_DEV_OPTIONAL_CMD}
+
 clobber:
 	# first clean-up dangling images as that might prevent some of the later cleans
 	docker system prune --force
