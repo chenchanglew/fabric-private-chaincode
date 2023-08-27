@@ -27,12 +27,7 @@ func (t *Tlestate) GetMeta(namespace string, key string) ([]byte, error) {
 	if !ok {
 		return nil, errors.Errorf("namespace not found: %s", namespace)
 	}
-
-	meta, ok := metaMap[key]
-	if !ok {
-		return nil, errors.Errorf("key not found: %s", key)
-	}
-
+	meta := metaMap[key]
 	return meta, nil
 }
 

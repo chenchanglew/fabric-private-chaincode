@@ -107,16 +107,13 @@ func (s *TleStubInterface) GetState(key string) ([]byte, error) {
 		return nil, err
 	}
 	if metadata == nil {
-		return nil, errors.New("TLE metadata key not found")
+		return nil, nil
 	}
 
 	// getdata from state
 	encValue, err := s.GetPublicState(key)
 	if err != nil {
 		return nil, err
-	}
-	if len(encValue) == 0 {
-		return nil, errors.New("KVS key not found")
 	}
 
 	err = s.ValidateMeta(metadata, encValue)
