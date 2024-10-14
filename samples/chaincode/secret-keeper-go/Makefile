@@ -4,18 +4,13 @@
 # SPDX-License-Identifier: Apache-2.0
 
 TOP = ../../..
-include $(TOP)/ecc_go/build.mk
 
 CC_NAME ?= fpc-secret-keeper-go
 
 # Define paths for cmd subdirectories
-NAIVE_PATH = cmd/naive/main.go
+DEFAULT= cmd/naive/main.go
 SKVS_PATH = cmd/skvs/main.go
 
-# Target to build naive version
-naive:
-	$(MAKE) build MAIN_GO_PATH=$(NAIVE_PATH)
+MAIN_GO_PATH ?=$(DEFAULT)
 
-# Target to build skvs version
-skvs:
-	$(MAKE) build MAIN_GO_PATH=$(SKVS_PATH)
+include $(TOP)/ecc_go/build.mk
